@@ -522,3 +522,5 @@ select:focus-visible {outline:2px solid var(--green);outline-offset:3px}
 #history {padding-bottom:15px}
 
 #pipeline-summary {display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:10px;font-size:11px} #pipeline-summary>div {padding:8px;background:var(--bg);border-radius:8px}
+
+#import-file {width:100%;font-size:11px;margin-top:8px} #import-preview {margin-top:10px}

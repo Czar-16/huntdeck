@@ -12,6 +12,7 @@ const $ = (id) => document.getElementById(id);
 let state;
 let historyLimit = 50;
 let noteId;
+let importSource;
 let busy = false;
 let refreshQueued = false;
 let refreshFailed = false;
@@ -77,6 +78,7 @@ function render() {
   $("streak").hidden = !state.settings.streaks || !run;
   $("streak").textContent = `${run} day streak`;
   renderFeatures();
+  $("import-card").hidden = !state.settings.csvImport;
   $("milestones-card").hidden = !state.settings.milestones;
   $("earned-milestones").textContent = state.settings.earnedMilestones.length ? state.settings.earnedMilestones.map(n => `${n} applications`).join(" · ") : "Your first milestone is 10 applications.";
   $("quick-note").hidden ||= !state.settings.notes;
@@ -236,6 +238,7 @@ async function mutate(message, success, optimistic = false) {
       $("quick-note").hidden = false;
     }
     if (message.type === "updateNote") $("quick-note").hidden = true;
+    if (message.type === "previewImport") { $("import-summary").textContent = `${state.importPreview.additions} additions · ${state.importPreview.duplicates} duplicates. Existing entries are kept.`; $("import-preview").hidden = false; }
     if (state.milestone) success = `${state.milestone} applications! Milestone earned.`;
     notify(success);
     if (optimistic) {
@@ -435,3 +438,15 @@ function appendPipeline(card, entry) {
 }
 
 addFeature("milestones", "Milestones");
+
+addFeature("csvImport", "CSV import");
+$("import-file").addEventListener("change", async () => {
+  $("import-preview").hidden = true;
+  const file = $("import-file").files[0]; if (!file) return;
+  if (file.size > 5_000_000) { notify("CSV must be under 5 MB.", true); return; }
+  importSource = await file.text();
+  await mutate({type:"previewImport",csv:importSource}, "Review import before confirming.");
+});
+function cancelImport() { importSource = undefined; $("import-file").value = ""; $("import-preview").hidden = true; }
+$("cancel-import").addEventListener("click", cancelImport);
+$("confirm-import").addEventListener("click", async () => { if (!importSource) return; await mutate({type:"confirmImport",csv:importSource}, "CSV imported."); cancelImport(); });

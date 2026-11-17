@@ -360,7 +360,7 @@ try {
       );
     }
   }
-  for (const [preset, fill] of [["yellow", "rgb(255, 255, 0)"], ["red", "rgb(255, 77, 77)"], ["green", "rgb(77, 255, 77)"]]) {
+  for (const [preset, fill] of [["yellow", "rgb(255, 255, 0)"], ["red", "rgb(255, 51, 51)"], ["green", "rgb(77, 255, 77)"]]) {
     await page.locator(`[data-appearance="amoled-${preset}"]`).click();
     await ready(page);
     const colors = await page.evaluate(() => ({

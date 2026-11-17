@@ -868,6 +868,6 @@ summary:focus-visible, select:focus-visible { outline: 2px solid var(--green); o
 .theme-options i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
 :root[data-theme^="amoled-"] { color-scheme: dark; --bg: #000000; --panel: #000000; --text: #FFFFFF; --muted: #B0B0B0; --line: #333333; }
 :root[data-theme="amoled-yellow"] { --green: #FFFF00; --action: #FFFF00; }
-:root[data-theme="amoled-red"] { --green: #FF4D4D; --action: #FF4D4D; }
+:root[data-theme="amoled-red"] { --green: #FF3333; --action: #FF3333; }
 :root[data-theme="amoled-green"] { --green: #4DFF4D; --action: #4DFF4D; }
 :root[data-theme^="amoled-"] .apply-button { color: #000000; }

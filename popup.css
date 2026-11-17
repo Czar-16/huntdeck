@@ -516,3 +516,7 @@ select:focus-visible {outline:2px solid var(--green);outline-offset:3px}
 #heatmap {display:grid;grid-template-columns:repeat(7,22px);gap:6px;margin:12px auto;width:max-content}
 .heat {width:22px;height:22px;border:1px solid var(--line);border-radius:5px;background:var(--bg)}
 .level-1 {background:color-mix(in srgb,var(--green) 25%,var(--bg))}.level-2 {background:color-mix(in srgb,var(--green) 60%,var(--bg))}.level-3 {background:var(--green)}
+
+.note-form label,#quick-note-form label {display:block;margin:8px 0;font-size:11px}
+.note-form input,#quick-note-form input {display:block;width:100%;margin-top:4px}
+#history {padding-bottom:15px}

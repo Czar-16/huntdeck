@@ -10,6 +10,8 @@ import {
 
 const $ = (id) => document.getElementById(id);
 let state;
+let historyLimit = 50;
+let noteId;
 let busy = false;
 let refreshQueued = false;
 let refreshFailed = false;
@@ -171,6 +173,7 @@ function render() {
   $("retry-migration").hidden = !state.migrationFailed;
   $("appearance").value = state.settings.appearance;
   document.documentElement.dataset.theme = state.settings.appearance;
+  if (!$("history").hidden) renderHistory();
   controls();
 }
 
@@ -218,6 +221,14 @@ async function mutate(message, success, optimistic = false) {
   render();
   try {
     state = await request(message);
+    if (message.type === "addApplication" && state.settings.notes) {
+      noteId = state.savedId;
+      $("quick-note-form").replaceChildren(...noteFields({}, async note => {
+        await mutate({type:"updateNote", id:noteId, note}, "Note saved.");
+      }));
+      $("quick-note").hidden = false;
+    }
+    if (message.type === "updateNote") $("quick-note").hidden = true;
     notify(success);
     if (optimistic) {
       setTimeout(() => { if ($("message").textContent === success) notify(); }, 2000);
@@ -246,6 +257,7 @@ async function mutate(message, success, optimistic = false) {
 }
 
 function showSettings(open) {
+  $("history").hidden = true;
   $("dashboard").hidden = open;
   $("settings").hidden = !open;
   $("settings-button").hidden = open;
@@ -315,7 +327,7 @@ document.addEventListener("keydown", (event) => {
     if (!$("reset-confirm").hidden && !busy) {
       $("reset-confirm").hidden = true;
       $("reset-button").focus();
-    } else if (!$("settings").hidden) showSettings(false);
+    } else if (!$("settings").hidden || !$("history").hidden) showSettings(false);
   }
 });
 chrome.storage.onChanged.addListener((changes, area) => {
@@ -367,3 +379,40 @@ addFeature("streaks", "Streaks");
 addFeature("badge", "Toolbar badge");
 
 addFeature("heatmap", "Activity heatmap");
+
+addFeature("notes", "Quick notes");
+function noteFields(entry, save) {
+  const nodes = [];
+  for (const [key, limit] of [["company",120],["role",120],["tag",80]]) {
+    const label = document.createElement("label"); label.textContent = key[0].toUpperCase()+key.slice(1);
+    const input = document.createElement("input"); input.name = key; input.maxLength = limit; input.value = entry[key] || "";
+    label.append(input); nodes.push(label);
+  }
+  const button = document.createElement("button"); button.type = "submit"; button.className = "secondary-button"; button.textContent = "Save note";
+  button.addEventListener("click", event => { event.preventDefault(); save(Object.fromEntries(nodes.map(label => [label.lastChild.name,label.lastChild.value]))); });
+  return [...nodes, button];
+}
+$("quick-note-form").addEventListener("submit", event => { event.preventDefault(); $("quick-note-form button").click(); });
+$("skip-note").addEventListener("click", () => { $("quick-note").hidden = true; noteId = undefined; });
+$("history-button").addEventListener("click", () => {
+  historyLimit = 50; $("dashboard").hidden = true; $("settings").hidden = true; $("history").hidden = false;
+  $("settings-button").hidden = true; $("back-button").hidden = false; renderHistory(); $("back-button").focus();
+});
+$("load-more").addEventListener("click", () => { historyLimit += 50; renderHistory(); });
+function renderHistory() {
+  const entries = state.applications.map((app,index) => ({...app,index})).sort((a,b) => Date.parse(b.timestamp)-Date.parse(a.timestamp) || b.index-a.index);
+  $("history-entries").replaceChildren(...entries.slice(0,historyLimit).map(entry => {
+    const card = document.createElement("article"); card.className = "settings-card history-entry";
+    const time = document.createElement("p"); time.textContent = new Date(entry.timestamp).toLocaleString(); card.append(time);
+    if (state.settings.notes) {
+      const form = document.createElement("form"); form.className = "note-form";
+      form.append(...noteFields(entry, note => mutate({type:"updateNote",id:entry.id,note}, "Note saved.")));
+      form.addEventListener("submit", event => { event.preventDefault(); form.querySelector("button").click(); }); card.append(form);
+    }
+    appendPipeline(card, entry);
+    for (const input of card.querySelectorAll("input,button,select")) input.disabled = busy || state.readOnly || state.historyUnreadable || state.migrationFailed;
+    return card;
+  }));
+  $("load-more").hidden = entries.length <= historyLimit;
+}
+function appendPipeline() {}

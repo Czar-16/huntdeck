@@ -80,6 +80,7 @@
         </div>
       </section>
 
+      <section id="quick-note" class="settings-card" hidden><h2>Add a quick note</h2><form id="quick-note-form"></form><button id="skip-note" class="text-button">Skip</button></section>
       <section class="stats" aria-label="Application totals"><div><span class="stat-label">All time</span><strong id="total">—</strong></div>
         <div>
           <span class="stat-label">Today</span><strong id="today">—</strong>
@@ -110,12 +111,13 @@
       <section class="activity-section" aria-labelledby="activity-heading">
         <div class="section-heading">
           <h2 id="activity-heading">Recent activity</h2>
-          <span class="small muted">Last 5 active days</span>
+          <button id="history-button" class="text-button">View history →</button>
         </div>
         <div id="activity"><p class="empty">Loading your applications…</p></div>
       </section>
     </main>
 
+    <main id="history" hidden><h1>History</h1><p class="small muted">Newest first</p><div id="history-entries"></div><button class="secondary-button full" id="load-more">Load 50 more</button></main>
     <main id="settings" hidden><section class="settings-card"><h2>Optional tools</h2><div id="feature-toggles"></div></section>
       <section class="settings-card"><h2>Appearance</h2><label for="appearance">Theme</label><select id="appearance"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></section>
       <div class="settings-heading">

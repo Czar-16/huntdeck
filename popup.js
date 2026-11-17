@@ -72,8 +72,8 @@ function render() {
   for (const key of ["total", "today", "week", "month"])
     $(key).textContent = stats[key].toLocaleString();
   $("goal-label").textContent = `${stats.today} / ${state.dailyGoal}`;
-  $("goal-fill").style.width =
-    `${Math.min((stats.today / state.dailyGoal) * 100, 100)}%`;
+  $("ring-count").textContent = stats.today;
+  $("goal-fill").style.strokeDashoffset = 477.522 * (1 - Math.min(stats.today / state.dailyGoal, 1));
   $("goal-progress").setAttribute("aria-valuemax", state.dailyGoal);
   $("goal-progress").setAttribute(
     "aria-valuenow",
@@ -204,6 +204,14 @@ async function mutate(message, success, optimistic = false) {
   try {
     state = await request(message);
     notify(success);
+    if (optimistic) {
+      setTimeout(() => { if ($("message").textContent === success) notify(); }, 2000);
+      if (statistics(previous.applications).today < state.dailyGoal && statistics(state.applications).today >= state.dailyGoal) {
+        $("goal-progress").classList.remove("pulse");
+        void $("goal-progress").offsetWidth;
+        $("goal-progress").classList.add("pulse");
+      }
+    }
   } catch (error) {
     state = previous;
     notify(error.message, true);
@@ -239,7 +247,7 @@ $("home-link").addEventListener("click", (event) => {
   showSettings(false);
 });
 $("apply-button").addEventListener("click", () =>
-  mutate({ type: "addApplication" }, "Application saved. Keep going!", true),
+  mutate({ type: "addApplication" }, "Saved. Keep going!", true),
 );
 $("undo-button").addEventListener("click", () =>
   mutate({ type: "undoLatest" }, "Latest application removed."),

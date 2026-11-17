@@ -486,3 +486,13 @@ h1,h2,.brand,.total {font-family:"Space Grotesk",sans-serif}
 #message.error {height:auto}
 .topbar {margin-bottom:6px}
 footer {margin-top:8px; padding:8px 0}
+
+.ring-wrap {width:176px;height:176px;position:relative;margin:0 auto}
+svg.ring {width:176px;height:176px;transform:rotate(-90deg);stroke-width:12px}
+.ring-track {stroke:var(--line)}
+#goal-fill {stroke:var(--green);stroke-dasharray:477.522;stroke-dashoffset:477.522;transition:stroke-dashoffset 300ms;stroke-linecap:round}
+.ring-center {position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px}
+#ring-count {font:700 44px "Space Grotesk";line-height:1}
+.hero .apply-button {margin-top:8px}
+.pulse {animation:pulse 600ms ease-out}
+@keyframes pulse {50% {filter:drop-shadow(0 0 10px var(--green))}}

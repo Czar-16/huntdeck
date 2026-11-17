@@ -61,8 +61,10 @@
         <div class="eyebrow" id="total-label">
           YOUR NEXT CHAPTER STARTS HERE
         </div>
-        <div class="total" id="total">—</div>
-        <p class="muted">applications sent. opportunities ahead.</p>
+        <div class="ring-wrap" id="goal-progress" role="progressbar" aria-label="Daily application goal" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+          <svg class="ring" viewBox="0 0 176 176" aria-hidden="true"><circle class="ring-track" cx="88" cy="88" r="76"/><circle id="goal-fill" cx="88" cy="88" r="76"/></svg>
+          <div class="ring-center"><strong id="ring-count">0</strong><span id="goal-label">0 / 10</span><span class="small muted">DAILY GOAL</span></div>
+        </div><p class="small muted" id="goal-message">One application at a time.</p>
         <button class="apply-button" id="apply-button" disabled>
           <span aria-hidden="true">＋</span> 1 Applied
           <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -78,7 +80,7 @@
         </div>
       </section>
 
-      <section class="stats" aria-label="Application totals">
+      <section class="stats" aria-label="Application totals"><div><span class="stat-label">All time</span><strong id="total">—</strong></div>
         <div>
           <span class="stat-label">Today</span><strong id="today">—</strong>
         </div>
@@ -89,25 +91,6 @@
           <span class="stat-label">This month</span
           ><strong id="month">—</strong>
         </div>
-      </section>
-
-      <section class="goal-section" aria-labelledby="goal-heading">
-        <div class="section-heading">
-          <h2 id="goal-heading">Daily goal</h2>
-          <span id="goal-label">— / 10</span>
-        </div>
-        <div
-          class="progress"
-          id="goal-progress"
-          role="progressbar"
-          aria-label="Daily application goal"
-          aria-valuemin="0"
-          aria-valuemax="10"
-          aria-valuenow="0"
-        >
-          <div id="goal-fill"></div>
-        </div>
-        <p class="small muted" id="goal-message">One application at a time.</p>
       </section>
 
       <section class="chart-section" aria-labelledby="chart-heading">
@@ -126,7 +109,7 @@
       <section class="activity-section" aria-labelledby="activity-heading">
         <div class="section-heading">
           <h2 id="activity-heading">Recent activity</h2>
-          <span class="small muted">Last 3 active days</span>
+          <span class="small muted">Last 5 active days</span>
         </div>
         <div id="activity"><p class="empty">Loading your applications…</p></div>
       </section>

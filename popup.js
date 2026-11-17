@@ -125,7 +125,7 @@ function render() {
         .map((n) => `${n} applications`)
         .join(" · ")
     : "Your first milestone is 10 applications.";
-  $("quick-note").hidden ||= !state.settings.notes;
+  $("quick-note").hidden = !state.settings.notes || !noteId;
   $("pipeline-card").hidden = !state.settings.pipeline;
   $("pipeline-summary").replaceChildren(
     ...["Applied", "Interview", "Offer", "Rejected"].map((status) => {
@@ -506,7 +506,7 @@ function noteFields(entry, save) {
     input.name = key;
     input.maxLength = limit;
     input.required = true;
-    input.value = entry[key] || "";
+    input.value = input.defaultValue = entry[key] || "";
     label.append(input);
     nodes.push(label);
   }
@@ -592,6 +592,12 @@ function renderHistory() {
     card.querySelector(".history-company").textContent = entry.company;
     card.querySelector(".history-role").textContent = entry.role;
     card.querySelector(".history-status").textContent = entry.pipeline || "Applied";
+    for (const input of card.querySelectorAll("form input")) {
+      if (input.value === input.defaultValue || input.value === entry[input.name]) {
+        input.value = entry[input.name] || "";
+        input.defaultValue = input.value;
+      }
+    }
     card.querySelector("form").hidden = !state.settings.notes;
     const pipeline = card.querySelector(".history-pipeline");
     pipeline.replaceChildren();

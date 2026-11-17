@@ -139,6 +139,10 @@ The Firefox smoke check uses Selenium and geckodriver in an isolated profile. In
 
 Regenerate icons with `npm run icons` (Python 3 standard library).
 
+## License
+
+Huntdeck is licensed under the [MIT License](LICENSE). Bundled fonts retain their SIL Open Font License notices below.
+
 ## Font notices
 
 [Inter](https://github.com/google/fonts/tree/main/ofl/inter) and [Space Grotesk](https://github.com/google/fonts/tree/main/ofl/spacegrotesk) are bundled under the SIL Open Font License 1.1. See [Inter license](fonts/Inter-LICENSE.txt) and [Space Grotesk license](fonts/SpaceGrotesk-LICENSE.txt).

@@ -24,7 +24,7 @@ if output.exists():
     shutil.rmtree(output)
 output.mkdir(parents=True)
 (output / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
-for name in ["background.js", "popup.html", "popup.css", "popup.js", "lib", "icons", "fonts"]:
+for name in ["LICENSE", "background.js", "popup.html", "popup.css", "popup.js", "lib", "icons", "fonts"]:
     source = root / name
     if source.is_dir():
         shutil.copytree(source, output / name)

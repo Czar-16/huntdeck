@@ -1,4 +1,5 @@
 import {
+  heatmap,
   streak,
   csv,
   localDate,
@@ -74,6 +75,12 @@ function render() {
   $("streak").hidden = !state.settings.streaks || !run;
   $("streak").textContent = `${run} day streak`;
   renderFeatures();
+  $("heatmap-card").hidden = !state.settings.heatmap;
+  $("heatmap").replaceChildren(...heatmap(state.applications, now).map(day => {
+    const cell = document.createElement("button"); cell.className = `heat level-${day.level}`;
+    cell.disabled = day.future; cell.title = cell.ariaLabel = `${day.date}: ${day.count} applications${day.future ? ", future" : ""}`;
+    return cell;
+  }));
   for (const key of ["total", "today", "week", "month"])
     $(key).textContent = stats[key].toLocaleString();
   $("goal-label").textContent = `${stats.today} / ${state.dailyGoal}`;
@@ -358,3 +365,5 @@ function addFeature(key, title) {
 addFeature("streaks", "Streaks");
 
 addFeature("badge", "Toolbar badge");
+
+addFeature("heatmap", "Activity heatmap");

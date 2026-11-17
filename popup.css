@@ -512,3 +512,7 @@ select:focus-visible {outline:2px solid var(--green);outline-offset:3px}
 .streak {color:var(--streak);font-size:10px;position:absolute;right:22px;top:60px}
 :root[data-theme="light"] .streak {color:#855000}
 @media(prefers-color-scheme:light){:root[data-theme="system"] .streak {color:#855000}}
+
+#heatmap {display:grid;grid-template-columns:repeat(7,22px);gap:6px;margin:12px auto;width:max-content}
+.heat {width:22px;height:22px;border:1px solid var(--line);border-radius:5px;background:var(--bg)}
+.level-1 {background:color-mix(in srgb,var(--green) 25%,var(--bg))}.level-2 {background:color-mix(in srgb,var(--green) 60%,var(--bg))}.level-3 {background:var(--green)}

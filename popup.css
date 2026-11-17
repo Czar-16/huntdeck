@@ -844,3 +844,11 @@ body {
     --success: #316b3a;
   }
 }
+
+.history-entry summary { cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 5px 10px; overflow-wrap: anywhere; }
+.history-entry summary::after { content: "＋"; grid-column: 2; grid-row: 1; }
+.history-entry[open] summary::after { content: "−"; }
+.history-company { font-weight: 650; }
+.history-role { color: var(--muted); grid-column: 1; }
+.history-status { grid-column: 2; grid-row: 2; font-size: 11px; }
+summary:focus-visible, select:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }

@@ -549,45 +549,59 @@ $("load-more").addEventListener("click", () => {
   historyLimit += 50;
   renderHistory();
 });
+const historyRows = new Map();
 function renderHistory() {
   const entries = state.applications
     .map((app, index) => ({ ...app, index }))
-    .sort(
-      (a, b) =>
-        Date.parse(b.timestamp) - Date.parse(a.timestamp) || b.index - a.index,
-    );
-  $("history-entries").replaceChildren(
-    ...entries.slice(0, historyLimit).map((entry) => {
-      const card = document.createElement("article");
+    .filter((app) => app.company?.trim() && app.role?.trim())
+    .sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp) || b.index - a.index);
+  const ids = new Set(entries.map((entry) => entry.id));
+  for (const id of historyRows.keys()) if (!ids.has(id)) historyRows.delete(id);
+  const rows = entries.slice(0, historyLimit).map((entry) => {
+    let card = historyRows.get(entry.id);
+    if (!card) {
+      card = document.createElement("details");
       card.className = "settings-card history-entry";
+      const summary = document.createElement("summary");
+      summary.append(...["company", "role", "status"].map((key) => {
+        const span = document.createElement("span");
+        span.className = `history-${key}`;
+        return span;
+      }));
       const time = document.createElement("p");
-      time.textContent = new Date(entry.timestamp).toLocaleString();
-      card.append(time);
-      if (state.settings.notes) {
-        const form = document.createElement("form");
-        form.className = "note-form";
-        form.append(
-          ...noteFields(entry, (note) =>
-            mutate({ type: "updateNote", id: entry.id, note }, "Note saved."),
-          ),
-        );
-        form.addEventListener("submit", (event) => {
-          event.preventDefault();
-          form.querySelector("button").click();
-        });
-        card.append(form);
-      }
-      appendPipeline(card, entry);
-      for (const input of card.querySelectorAll("input,button,select"))
-        input.disabled =
-          busy ||
-          state.readOnly ||
-          state.historyUnreadable ||
-          state.migrationFailed;
-      return card;
-    }),
-  );
+      time.textContent = `Recorded ${new Date(entry.timestamp).toLocaleString()}`;
+      const form = document.createElement("form");
+      form.className = "note-form";
+      form.append(...noteFields(entry, (note) =>
+        mutate({ type: "updateNote", id: entry.id, note }, "Note saved.")));
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        form.querySelector("button").click();
+      });
+      const pipeline = document.createElement("div");
+      pipeline.className = "history-pipeline";
+      card.append(summary, time, form, pipeline);
+      historyRows.set(entry.id, card);
+    }
+    card.querySelector(".history-company").textContent = entry.company;
+    card.querySelector(".history-role").textContent = entry.role;
+    card.querySelector(".history-status").textContent = entry.pipeline || "Applied";
+    card.querySelector("form").hidden = !state.settings.notes;
+    const pipeline = card.querySelector(".history-pipeline");
+    pipeline.replaceChildren();
+    appendPipeline(pipeline, entry);
+    return card;
+  });
+  // Keep existing nodes connected so focus and native details expansion survive refreshes.
+  for (const child of [...$("history-entries").children])
+    if (!rows.includes(child)) child.remove();
+  rows.forEach((row, index) => {
+    if ($("history-entries").children[index] !== row)
+      $("history-entries").insertBefore(row, $("history-entries").children[index] || null);
+  });
+  $("history-empty").hidden = entries.length > 0;
   $("load-more").hidden = entries.length <= historyLimit;
+  controls();
 }
 addFeature("pipeline", "Application pipeline");
 function appendPipeline(card, entry) {

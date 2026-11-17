@@ -77,6 +77,8 @@ function render() {
   $("streak").hidden = !state.settings.streaks || !run;
   $("streak").textContent = `${run} day streak`;
   renderFeatures();
+  $("milestones-card").hidden = !state.settings.milestones;
+  $("earned-milestones").textContent = state.settings.earnedMilestones.length ? state.settings.earnedMilestones.map(n => `${n} applications`).join(" · ") : "Your first milestone is 10 applications.";
   $("quick-note").hidden ||= !state.settings.notes;
   $("pipeline-card").hidden = !state.settings.pipeline;
   $("pipeline-summary").replaceChildren(...["Applied","Interview","Offer","Rejected"].map(status => {
@@ -234,6 +236,7 @@ async function mutate(message, success, optimistic = false) {
       $("quick-note").hidden = false;
     }
     if (message.type === "updateNote") $("quick-note").hidden = true;
+    if (state.milestone) success = `${state.milestone} applications! Milestone earned.`;
     notify(success);
     if (optimistic) {
       setTimeout(() => { if ($("message").textContent === success) notify(); }, 2000);
@@ -430,3 +433,5 @@ function appendPipeline(card, entry) {
   select.addEventListener("change", () => mutate({type:"updateStatus", id:entry.id, status:select.value}, "Status saved."));
   label.append(select); card.append(label);
 }
+
+addFeature("milestones", "Milestones");

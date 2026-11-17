@@ -3,7 +3,7 @@
   <h1>Huntdeck</h1>
   <p><strong>One click for every application.</strong><br>A small space for your next big move.</p>
   <p><img src="https://img.shields.io/badge/version-1.1.1-c3f56b" alt="Version 1.1.1" /> <img src="https://img.shields.io/badge/privacy-local_only-c3f56b" alt="Local only" /> <img src="https://img.shields.io/badge/Chrome-Manifest_V3-6be6ed" alt="Chrome Manifest V3" /></p>
-  <p><a href="#installation">Install unpacked</a> · <a href="#usage">Usage</a> · <a href="#privacy-and-backups">Privacy & backups</a> · <a href="CHANGELOG.md">Changelog</a></p>
+  <p><a href="#installation">Install for Firefox or Chrome</a> · <a href="#usage">Usage</a> · <a href="#privacy-and-backups">Privacy & backups</a> · <a href="CHANGELOG.md">Changelog</a></p>
 </div>
 
 ## Features
@@ -28,12 +28,18 @@ Switching a tool off hides its controls and retains its data. Notifications, wee
 
 ## Installation
 
-1. [Clone this repository](https://github.com/Czar-16/huntdeck) or use GitHub's **Code → Download ZIP** and extract it.
+### Firefox
+
+Install Huntdeck from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/huntdeck/): open the listing, click **Add to Firefox**, and confirm the installation. Pin Huntdeck to the toolbar for quick access.
+
+### Chrome
+
+1. [Download the Huntdeck ZIP](https://github.com/Czar-16/huntdeck/archive/refs/heads/main.zip) and extract it into a folder you will keep.
 2. Open `chrome://extensions` and enable **Developer mode**.
-3. Select **Load unpacked** and choose the folder containing `manifest.json`.
+3. Click **Load unpacked** and select the extracted `huntdeck-main` folder containing `manifest.json`.
 4. Pin Huntdeck from Chrome's Extensions menu.
 
-No build step is required. After pulling updates, click **Reload** on Huntdeck's extension card and reopen the popup. This repository does not currently provide a Chrome Web Store listing. Upload packages can be generated with the commands below.
+No build step is required. Keep the extracted folder in place while the extension is installed. To update, download and extract the latest ZIP into the same folder, click **Reload** on Huntdeck's extension card, and reopen the popup. Huntdeck is installed manually in Chrome; there is no Chrome Web Store listing.
 
 ### Firefox package and publishing
 

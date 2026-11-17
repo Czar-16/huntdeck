@@ -520,3 +520,5 @@ select:focus-visible {outline:2px solid var(--green);outline-offset:3px}
 .note-form label,#quick-note-form label {display:block;margin:8px 0;font-size:11px}
 .note-form input,#quick-note-form input {display:block;width:100%;margin-top:4px}
 #history {padding-bottom:15px}
+
+#pipeline-summary {display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:10px;font-size:11px} #pipeline-summary>div {padding:8px;background:var(--bg);border-radius:8px}

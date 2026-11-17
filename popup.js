@@ -77,6 +77,11 @@ function render() {
   $("streak").hidden = !state.settings.streaks || !run;
   $("streak").textContent = `${run} day streak`;
   renderFeatures();
+  $("quick-note").hidden ||= !state.settings.notes;
+  $("pipeline-card").hidden = !state.settings.pipeline;
+  $("pipeline-summary").replaceChildren(...["Applied","Interview","Offer","Rejected"].map(status => {
+    const segment = document.createElement("div"); segment.textContent = `${status}: ${state.applications.filter(app => app.pipeline === status).length}`; return segment;
+  }));
   $("heatmap-card").hidden = !state.settings.heatmap;
   $("heatmap").replaceChildren(...heatmap(state.applications, now).map(day => {
     const cell = document.createElement("button"); cell.className = `heat level-${day.level}`;
@@ -415,4 +420,13 @@ function renderHistory() {
   }));
   $("load-more").hidden = entries.length <= historyLimit;
 }
-function appendPipeline() {}
+addFeature("pipeline", "Application pipeline");
+function appendPipeline(card, entry) {
+  if (!state.settings.pipeline || !(entry.pipeline || entry.company || entry.role || entry.tag)) return;
+  const label = document.createElement("label"); label.textContent = "Pipeline status ";
+  const select = document.createElement("select");
+  for (const status of ["Applied","Interview","Offer","Rejected"]) { const option = document.createElement("option"); option.value = option.textContent = status; select.append(option); }
+  select.value = entry.pipeline || "Applied";
+  select.addEventListener("change", () => mutate({type:"updateStatus", id:entry.id, status:select.value}, "Status saved."));
+  label.append(select); card.append(label);
+}

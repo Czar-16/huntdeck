@@ -51,6 +51,7 @@ function notify(message = "", error = false) {
 function controls() {
   const unavailable = !state || busy;
   $("dashboard").setAttribute("aria-busy", String(unavailable));
+  $("theme-button").disabled = !state;
   $("apply-button").disabled =
     unavailable ||
     state?.historyUnreadable ||
@@ -703,7 +704,7 @@ $("theme-button").addEventListener("click", () => {
   if (!$("theme-popover").hidden) return closeTheme(true);
   $("theme-popover").hidden = false;
   $("theme-button").setAttribute("aria-expanded", "true");
-  $("theme-popover button[aria-pressed='true']").focus();
+  $("theme-popover").querySelector("button[aria-pressed='true']").focus();
 });
 document.addEventListener("pointerdown", (event) => {
   if (!$("theme-popover").contains(event.target) && !$("theme-button").contains(event.target)) closeTheme();

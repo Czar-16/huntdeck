@@ -48,15 +48,45 @@ function notify(message = "", error = false) {
 function controls() {
   const unavailable = !state || busy;
   $("dashboard").setAttribute("aria-busy", String(unavailable));
-  $("apply-button").disabled = unavailable || (state?.historyUnreadable || state?.migrationFailed || state?.readOnly);
+  $("apply-button").disabled =
+    unavailable ||
+    state?.historyUnreadable ||
+    state?.migrationFailed ||
+    state?.readOnly;
   $("undo-button").disabled =
-    unavailable || (state?.historyUnreadable || state?.migrationFailed || state?.readOnly) || !state?.applications.length;
-  $("save-goal").disabled = unavailable || (state?.historyUnreadable || state?.migrationFailed || state?.readOnly);
-  $("daily-goal").disabled = unavailable || (state?.historyUnreadable || state?.migrationFailed || state?.readOnly);
+    unavailable ||
+    state?.historyUnreadable ||
+    state?.migrationFailed ||
+    state?.readOnly ||
+    !state?.applications.length;
+  $("save-goal").disabled =
+    unavailable ||
+    state?.historyUnreadable ||
+    state?.migrationFailed ||
+    state?.readOnly;
+  $("daily-goal").disabled =
+    unavailable ||
+    state?.historyUnreadable ||
+    state?.migrationFailed ||
+    state?.readOnly;
   $("export-button").disabled = unavailable;
-  $("reset-button").disabled = unavailable || state?.historyUnreadable || state?.migrationFailed || state?.readOnly;
-  $("confirm-reset").disabled = unavailable || $("reset-text").value !== "RESET";
+  $("reset-button").disabled =
+    unavailable ||
+    state?.historyUnreadable ||
+    state?.migrationFailed ||
+    state?.readOnly;
+  $("confirm-reset").disabled =
+    unavailable || $("reset-text").value !== "RESET";
   $("cancel-reset").disabled = busy;
+  const blocked =
+    unavailable ||
+    state?.historyUnreadable ||
+    state?.migrationFailed ||
+    state?.readOnly;
+  for (const input of document.querySelectorAll(
+    "#feature-toggles input, #appearance, #accent, #goal-minus, #goal-plus, #import-file, #confirm-import, #quick-note-form input, #quick-note-form button, .history-entry input, .history-entry select, .history-entry button",
+  ))
+    input.disabled = blocked;
 }
 
 function displayDate(date, today) {
@@ -80,26 +110,42 @@ function render() {
   renderFeatures();
   $("accent-card").hidden = !state.settings.accents;
   $("accent").value = state.settings.accent;
-  document.documentElement.dataset.accent = state.settings.accents ? state.settings.accent : "lime";
+  document.documentElement.dataset.accent = state.settings.accents
+    ? state.settings.accent
+    : "lime";
   $("import-card").hidden = !state.settings.csvImport;
   $("milestones-card").hidden = !state.settings.milestones;
-  $("earned-milestones").textContent = state.settings.earnedMilestones.length ? state.settings.earnedMilestones.map(n => `${n} applications`).join(" · ") : "Your first milestone is 10 applications.";
+  $("earned-milestones").textContent = state.settings.earnedMilestones.length
+    ? state.settings.earnedMilestones
+        .map((n) => `${n} applications`)
+        .join(" · ")
+    : "Your first milestone is 10 applications.";
   $("quick-note").hidden ||= !state.settings.notes;
   $("pipeline-card").hidden = !state.settings.pipeline;
-  $("pipeline-summary").replaceChildren(...["Applied","Interview","Offer","Rejected"].map(status => {
-    const segment = document.createElement("div"); segment.textContent = `${status}: ${state.applications.filter(app => app.pipeline === status).length}`; return segment;
-  }));
+  $("pipeline-summary").replaceChildren(
+    ...["Applied", "Interview", "Offer", "Rejected"].map((status) => {
+      const segment = document.createElement("div");
+      segment.textContent = `${status}: ${state.applications.filter((app) => app.pipeline === status).length}`;
+      return segment;
+    }),
+  );
   $("heatmap-card").hidden = !state.settings.heatmap;
-  $("heatmap").replaceChildren(...heatmap(state.applications, now).map(day => {
-    const cell = document.createElement("button"); cell.className = `heat level-${day.level}`;
-    cell.disabled = day.future; cell.title = cell.ariaLabel = `${day.date}: ${day.count} applications${day.future ? ", future" : ""}`;
-    return cell;
-  }));
+  $("heatmap").replaceChildren(
+    ...heatmap(state.applications, now).map((day) => {
+      const cell = document.createElement("button");
+      cell.className = `heat level-${day.level}`;
+      cell.disabled = day.future;
+      cell.title =
+        cell.ariaLabel = `${day.date}: ${day.count} applications${day.future ? ", future" : ""}`;
+      return cell;
+    }),
+  );
   for (const key of ["total", "today", "week", "month"])
     $(key).textContent = stats[key].toLocaleString();
   $("goal-label").textContent = `${stats.today} / ${state.dailyGoal}`;
   $("ring-count").textContent = stats.today;
-  $("goal-fill").style.strokeDashoffset = 477.522 * (1 - Math.min(stats.today / state.dailyGoal, 1));
+  $("goal-fill").style.strokeDashoffset =
+    477.522 * (1 - Math.min(stats.today / state.dailyGoal, 1));
   $("goal-progress").setAttribute("aria-valuemax", state.dailyGoal);
   $("goal-progress").setAttribute(
     "aria-valuenow",
@@ -220,6 +266,8 @@ async function mutate(message, success, optimistic = false) {
   const previous = state;
   const start = Date.now();
   notify();
+  if (message.type === "updateSettings")
+    state = { ...state, settings: { ...state.settings, ...message.settings } };
   if (optimistic) {
     const timestamp = Date.now();
     state = {
@@ -235,18 +283,30 @@ async function mutate(message, success, optimistic = false) {
     state = await request(message);
     if (message.type === "addApplication" && state.settings.notes) {
       noteId = state.savedId;
-      $("quick-note-form").replaceChildren(...noteFields({}, async note => {
-        await mutate({type:"updateNote", id:noteId, note}, "Note saved.");
-      }));
+      $("quick-note-form").replaceChildren(
+        ...noteFields({}, async (note) => {
+          await mutate({ type: "updateNote", id: noteId, note }, "Note saved.");
+        }),
+      );
       $("quick-note").hidden = false;
     }
     if (message.type === "updateNote") $("quick-note").hidden = true;
-    if (message.type === "previewImport") { $("import-summary").textContent = `${state.importPreview.additions} additions · ${state.importPreview.duplicates} duplicates. Existing entries are kept.`; $("import-preview").hidden = false; }
-    if (state.milestone) success = `${state.milestone} applications! Milestone earned.`;
+    if (message.type === "previewImport") {
+      $("import-summary").textContent =
+        `${state.importPreview.additions} additions · ${state.importPreview.duplicates} duplicates. Existing entries are kept.`;
+      $("import-preview").hidden = false;
+    }
+    if (state.milestone)
+      success = `${state.milestone} applications! Milestone earned.`;
     notify(success);
     if (optimistic) {
-      setTimeout(() => { if ($("message").textContent === success) notify(); }, 2000);
-      if (statistics(previous.applications).today < state.dailyGoal && statistics(state.applications).today >= state.dailyGoal) {
+      setTimeout(() => {
+        if ($("message").textContent === success) notify();
+      }, 2000);
+      if (
+        statistics(previous.applications).today < state.dailyGoal &&
+        statistics(state.applications).today >= state.dailyGoal
+      ) {
         $("goal-progress").classList.remove("pulse");
         void $("goal-progress").offsetWidth;
         $("goal-progress").classList.add("pulse");
@@ -321,6 +381,8 @@ $("export-button").addEventListener("click", () => {
   );
 });
 $("reset-button").addEventListener("click", () => {
+  $("reset-text").value = "";
+  controls();
   $("reset-confirm").hidden = false;
   $("cancel-reset").focus();
 });
@@ -341,7 +403,8 @@ document.addEventListener("keydown", (event) => {
     if (!$("reset-confirm").hidden && !busy) {
       $("reset-confirm").hidden = true;
       $("reset-button").focus();
-    } else if (!$("settings").hidden || !$("history").hidden) showSettings(false);
+    } else if (!$("settings").hidden || !$("history").hidden)
+      showSettings(false);
   }
 });
 chrome.storage.onChanged.addListener((changes, area) => {
@@ -372,21 +435,52 @@ controls();
 void refresh();
 scheduleMidnight();
 
-$("appearance").addEventListener("change", () => mutate({type:"updateSettings", settings:{appearance:$("appearance").value}}, "Appearance saved."));
+$("appearance").addEventListener("change", () =>
+  mutate(
+    { type: "updateSettings", settings: { appearance: $("appearance").value } },
+    "Appearance saved.",
+  ),
+);
 $("reset-text").addEventListener("input", controls);
-$("retry-migration").addEventListener("click", () => mutate({type:"retryMigration"}, "Migration retried."));
-for (const [id, delta] of [["goal-minus",-1],["goal-plus",1]]) $(id).addEventListener("click", () => { $("daily-goal").value = Math.max(1,Math.min(200,Number($("daily-goal").value)+delta)); });
+$("retry-migration").addEventListener("click", () =>
+  mutate({ type: "retryMigration" }, "Migration retried."),
+);
+for (const [id, delta] of [
+  ["goal-minus", -1],
+  ["goal-plus", 1],
+])
+  $(id).addEventListener("click", () => {
+    $("daily-goal").value = Math.max(
+      1,
+      Math.min(200, Number($("daily-goal").value) + delta),
+    );
+  });
 
-const features = {streaks:"Streaks"};
 function renderFeatures() {
-  for (const input of $("feature-toggles").querySelectorAll("input")) { input.checked = state.settings[input.name]; input.disabled = busy || state.readOnly || state.historyUnreadable || state.migrationFailed; }
+  for (const input of $("feature-toggles").querySelectorAll("input")) {
+    input.checked = state.settings[input.name];
+    input.disabled =
+      busy ||
+      state.readOnly ||
+      state.historyUnreadable ||
+      state.migrationFailed;
+  }
 }
 function addFeature(key, title) {
-  features[key] = title;
-  const label = document.createElement("label"); label.className = "toggle";
-  const input = document.createElement("input"); input.type = "checkbox"; input.name = key; input.id = `feature-${key}`;
-  input.addEventListener("change", () => mutate({type:"updateSettings",settings:{[key]:input.checked}}, "Settings saved."));
-  label.append(document.createTextNode(title), input); $("feature-toggles").append(label);
+  const label = document.createElement("label");
+  label.className = "toggle";
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.name = key;
+  input.id = `feature-${key}`;
+  input.addEventListener("change", () =>
+    mutate(
+      { type: "updateSettings", settings: { [key]: input.checked } },
+      "Settings saved.",
+    ),
+  );
+  label.append(document.createTextNode(title), input);
+  $("feature-toggles").append(label);
 }
 addFeature("streaks", "Streaks");
 
@@ -397,47 +491,120 @@ addFeature("heatmap", "Activity heatmap");
 addFeature("notes", "Quick notes");
 function noteFields(entry, save) {
   const nodes = [];
-  for (const [key, limit] of [["company",120],["role",120],["tag",80]]) {
-    const label = document.createElement("label"); label.textContent = key[0].toUpperCase()+key.slice(1);
-    const input = document.createElement("input"); input.name = key; input.maxLength = limit; input.value = entry[key] || "";
-    label.append(input); nodes.push(label);
+  for (const [key, limit] of [
+    ["company", 120],
+    ["role", 120],
+    ["tag", 80],
+  ]) {
+    const label = document.createElement("label");
+    label.textContent = key[0].toUpperCase() + key.slice(1);
+    const input = document.createElement("input");
+    input.name = key;
+    input.maxLength = limit;
+    input.value = entry[key] || "";
+    label.append(input);
+    nodes.push(label);
   }
-  const button = document.createElement("button"); button.type = "submit"; button.className = "secondary-button"; button.textContent = "Save note";
-  button.addEventListener("click", event => { event.preventDefault(); save(Object.fromEntries(nodes.map(label => [label.lastChild.name,label.lastChild.value]))); });
+  const button = document.createElement("button");
+  button.type = "submit";
+  button.className = "secondary-button";
+  button.textContent = "Save note";
+  button.addEventListener("click", (event) => {
+    event.preventDefault();
+    save(
+      Object.fromEntries(
+        nodes.map((label) => [label.lastChild.name, label.lastChild.value]),
+      ),
+    );
+  });
   return [...nodes, button];
 }
-$("quick-note-form").addEventListener("submit", event => { event.preventDefault(); $("quick-note-form button").click(); });
-$("skip-note").addEventListener("click", () => { $("quick-note").hidden = true; noteId = undefined; });
-$("history-button").addEventListener("click", () => {
-  historyLimit = 50; $("dashboard").hidden = true; $("settings").hidden = true; $("history").hidden = false;
-  $("settings-button").hidden = true; $("back-button").hidden = false; renderHistory(); $("back-button").focus();
+$("quick-note-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  $("quick-note-form button").click();
 });
-$("load-more").addEventListener("click", () => { historyLimit += 50; renderHistory(); });
+$("skip-note").addEventListener("click", () => {
+  $("quick-note").hidden = true;
+  noteId = undefined;
+});
+$("history-button").addEventListener("click", () => {
+  historyLimit = 50;
+  $("dashboard").hidden = true;
+  $("settings").hidden = true;
+  $("history").hidden = false;
+  $("settings-button").hidden = true;
+  $("back-button").hidden = false;
+  renderHistory();
+  $("back-button").focus();
+});
+$("load-more").addEventListener("click", () => {
+  historyLimit += 50;
+  renderHistory();
+});
 function renderHistory() {
-  const entries = state.applications.map((app,index) => ({...app,index})).sort((a,b) => Date.parse(b.timestamp)-Date.parse(a.timestamp) || b.index-a.index);
-  $("history-entries").replaceChildren(...entries.slice(0,historyLimit).map(entry => {
-    const card = document.createElement("article"); card.className = "settings-card history-entry";
-    const time = document.createElement("p"); time.textContent = new Date(entry.timestamp).toLocaleString(); card.append(time);
-    if (state.settings.notes) {
-      const form = document.createElement("form"); form.className = "note-form";
-      form.append(...noteFields(entry, note => mutate({type:"updateNote",id:entry.id,note}, "Note saved.")));
-      form.addEventListener("submit", event => { event.preventDefault(); form.querySelector("button").click(); }); card.append(form);
-    }
-    appendPipeline(card, entry);
-    for (const input of card.querySelectorAll("input,button,select")) input.disabled = busy || state.readOnly || state.historyUnreadable || state.migrationFailed;
-    return card;
-  }));
+  const entries = state.applications
+    .map((app, index) => ({ ...app, index }))
+    .sort(
+      (a, b) =>
+        Date.parse(b.timestamp) - Date.parse(a.timestamp) || b.index - a.index,
+    );
+  $("history-entries").replaceChildren(
+    ...entries.slice(0, historyLimit).map((entry) => {
+      const card = document.createElement("article");
+      card.className = "settings-card history-entry";
+      const time = document.createElement("p");
+      time.textContent = new Date(entry.timestamp).toLocaleString();
+      card.append(time);
+      if (state.settings.notes) {
+        const form = document.createElement("form");
+        form.className = "note-form";
+        form.append(
+          ...noteFields(entry, (note) =>
+            mutate({ type: "updateNote", id: entry.id, note }, "Note saved."),
+          ),
+        );
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          form.querySelector("button").click();
+        });
+        card.append(form);
+      }
+      appendPipeline(card, entry);
+      for (const input of card.querySelectorAll("input,button,select"))
+        input.disabled =
+          busy ||
+          state.readOnly ||
+          state.historyUnreadable ||
+          state.migrationFailed;
+      return card;
+    }),
+  );
   $("load-more").hidden = entries.length <= historyLimit;
 }
 addFeature("pipeline", "Application pipeline");
 function appendPipeline(card, entry) {
-  if (!state.settings.pipeline || !(entry.pipeline || entry.company || entry.role || entry.tag)) return;
-  const label = document.createElement("label"); label.textContent = "Pipeline status ";
+  if (
+    !state.settings.pipeline ||
+    !(entry.pipeline || entry.company || entry.role || entry.tag)
+  )
+    return;
+  const label = document.createElement("label");
+  label.textContent = "Pipeline status ";
   const select = document.createElement("select");
-  for (const status of ["Applied","Interview","Offer","Rejected"]) { const option = document.createElement("option"); option.value = option.textContent = status; select.append(option); }
+  for (const status of ["Applied", "Interview", "Offer", "Rejected"]) {
+    const option = document.createElement("option");
+    option.value = option.textContent = status;
+    select.append(option);
+  }
   select.value = entry.pipeline || "Applied";
-  select.addEventListener("change", () => mutate({type:"updateStatus", id:entry.id, status:select.value}, "Status saved."));
-  label.append(select); card.append(label);
+  select.addEventListener("change", () =>
+    mutate(
+      { type: "updateStatus", id: entry.id, status: select.value },
+      "Status saved.",
+    ),
+  );
+  label.append(select);
+  card.append(label);
 }
 
 addFeature("milestones", "Milestones");
@@ -445,16 +612,36 @@ addFeature("milestones", "Milestones");
 addFeature("csvImport", "CSV import");
 $("import-file").addEventListener("change", async () => {
   $("import-preview").hidden = true;
-  const file = $("import-file").files[0]; if (!file) return;
-  if (file.size > 5_000_000) { notify("CSV must be under 5 MB.", true); return; }
+  const file = $("import-file").files[0];
+  if (!file) return;
+  if (file.size > 5_000_000) {
+    notify("CSV must be under 5 MB.", true);
+    return;
+  }
   importSource = await file.text();
-  await mutate({type:"previewImport",csv:importSource}, "Review import before confirming.");
+  await mutate(
+    { type: "previewImport", csv: importSource },
+    "Review import before confirming.",
+  );
 });
-function cancelImport() { importSource = undefined; $("import-file").value = ""; $("import-preview").hidden = true; }
+function cancelImport() {
+  importSource = undefined;
+  $("import-file").value = "";
+  $("import-preview").hidden = true;
+}
 $("cancel-import").addEventListener("click", cancelImport);
-$("confirm-import").addEventListener("click", async () => { if (!importSource) return; await mutate({type:"confirmImport",csv:importSource}, "CSV imported."); cancelImport(); });
+$("confirm-import").addEventListener("click", async () => {
+  if (!importSource) return;
+  await mutate({ type: "confirmImport", csv: importSource }, "CSV imported.");
+  cancelImport();
+});
 
 addFeature("accents", "Custom accents");
-$("accent").addEventListener("change", () => mutate({type:"updateSettings",settings:{accent:$("accent").value}}, "Accent saved."));
+$("accent").addEventListener("change", () =>
+  mutate(
+    { type: "updateSettings", settings: { accent: $("accent").value } },
+    "Accent saved.",
+  ),
+);
 
 addFeature("shortcut", "Keyboard shortcut (Alt+Shift+A)");

@@ -356,3 +356,5 @@ function addFeature(key, title) {
   label.append(document.createTextNode(title), input); $("feature-toggles").append(label);
 }
 addFeature("streaks", "Streaks");
+
+addFeature("badge", "Toolbar badge");

@@ -16,6 +16,9 @@
         ></a
       >
       <span id="streak" class="streak" hidden></span>
+      <button class="icon-button" id="theme-button" aria-label="Choose theme" title="Theme" aria-haspopup="dialog" aria-expanded="false" aria-controls="theme-popover">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1-3.7c-.9-.6-.5-2 .6-2H17a4 4 0 0 0 4-4c0-4.4-4-8.3-9-8.3Z"/><circle cx="7" cy="10" r=".7"/><circle cx="10" cy="6.5" r=".7"/><circle cx="15" cy="7" r=".7"/></svg>
+      </button>
       <button
         class="icon-button"
         id="settings-button"
@@ -41,6 +44,20 @@
       </button>
     </header>
 
+    <div id="theme-popover" role="dialog" aria-label="Theme" hidden>
+      <h2>Appearance</h2>
+      <div class="theme-options" role="group" aria-label="Appearance">
+        <button data-appearance="system">System</button><button data-appearance="light">Light</button><button data-appearance="dark">Dark</button>
+      </div>
+      <h2>Accent</h2>
+      <div class="theme-options" role="group" aria-label="Accent">
+        <button data-accent="lime"><i style="background:#c3f56b"></i>Lime</button><button data-accent="aqua"><i style="background:#6be6ed"></i>Aqua</button><button data-accent="amber"><i style="background:#ffd16b"></i>Amber</button>
+      </div>
+      <h2>AMOLED</h2>
+      <div class="theme-options" role="group" aria-label="AMOLED presets">
+        <button data-appearance="amoled-yellow">Yellow</button><button data-appearance="amoled-red">Red</button><button data-appearance="amoled-green">Green</button>
+      </div>
+    </div>
     <aside
       id="data-warning"
       class="notice warning"

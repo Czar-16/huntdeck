@@ -858,3 +858,16 @@ summary:focus-visible, select:focus-visible { outline: 2px solid var(--green); o
 #goal-form input { width: 100%; min-width: 0; text-align: center; }
 #goal-form button[type="button"] { height: 36px; }
 .settings-heading { margin: 12px 0 16px; }
+
+#theme-button { margin-left: auto; margin-right: 6px; }
+#theme-popover { position: absolute; top: 50px; right: 22px; width: 300px; z-index: 10; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); box-shadow: 0 8px 24px #0006; }
+#theme-popover h2 { margin: 10px 0 8px; }
+.theme-options { display: flex; gap: 6px; }
+.theme-options button { flex: 1; padding: 8px 4px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text); }
+.theme-options button[aria-pressed="true"] { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); }
+.theme-options i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
+:root[data-theme^="amoled-"] { color-scheme: dark; --bg: #000000; --panel: #000000; --text: #FFFFFF; --muted: #B0B0B0; --line: #333333; }
+:root[data-theme="amoled-yellow"] { --green: #FFFF00; --action: #FFFF00; }
+:root[data-theme="amoled-red"] { --green: #FF0000; --action: #FF0000; }
+:root[data-theme="amoled-green"] { --green: #00FF00; --action: #00FF00; }
+:root[data-theme^="amoled-"] .apply-button { color: #000000; }

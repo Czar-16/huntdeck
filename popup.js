@@ -85,7 +85,7 @@ function controls() {
     state?.migrationFailed ||
     state?.readOnly;
   for (const input of document.querySelectorAll(
-    "#feature-toggles input, #appearance, #accent, #goal-minus, #goal-plus, #import-file, #confirm-import, #quick-note-form input, #quick-note-form button, .history-entry input, .history-entry select, .history-entry button",
+    "#feature-toggles input, #theme-popover button, #goal-minus, #goal-plus, #import-file, #confirm-import, #quick-note-form input, #quick-note-form button, .history-entry input, .history-entry select, .history-entry button",
   ))
     input.disabled = blocked;
 }
@@ -109,11 +109,13 @@ function render() {
   $("streak").hidden = !state.settings.streaks || !run;
   $("streak").textContent = `${run} day streak`;
   renderFeatures();
-  $("accent-card").hidden = !state.settings.accents;
-  $("accent").value = state.settings.accent;
-  document.documentElement.dataset.accent = state.settings.accents
-    ? state.settings.accent
-    : "lime";
+  document.documentElement.dataset.accent = state.settings.accent;
+  for (const button of $("theme-popover").querySelectorAll("button")) {
+    const selected = button.dataset.appearance
+      ? button.dataset.appearance === state.settings.appearance
+      : !state.settings.appearance.startsWith("amoled-") && button.dataset.accent === state.settings.accent;
+    button.setAttribute("aria-pressed", String(selected));
+  }
   $("import-card").hidden = !state.settings.csvImport;
   $("milestones-card").hidden = !state.settings.milestones;
   $("earned-milestones").textContent = state.settings.earnedMilestones.length
@@ -230,7 +232,6 @@ function render() {
   $("data-warning").hidden = !state.warnings.length;
   $("data-warning").textContent = state.warnings.join(" ");
   $("retry-migration").hidden = !state.migrationFailed;
-  $("appearance").value = state.settings.appearance;
   document.documentElement.dataset.theme = state.settings.appearance;
   if (!$("history").hidden) renderHistory();
   controls();
@@ -339,6 +340,8 @@ function showSettings(open) {
   $("dashboard").hidden = open;
   $("settings").hidden = !open;
   $("settings-button").hidden = open;
+  $("theme-button").hidden = open;
+  closeTheme();
   $("back-button").hidden = !open;
   $("reset-confirm").hidden = true;
   if (state) $("daily-goal").value = state.dailyGoal;
@@ -404,6 +407,10 @@ $("confirm-reset").addEventListener("click", async () => {
 });
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
+    if (!$("theme-popover").hidden) {
+      closeTheme(true);
+      return;
+    }
     if (!$("reset-confirm").hidden && !busy) {
       $("reset-confirm").hidden = true;
       $("reset-button").focus();
@@ -436,12 +443,6 @@ controls();
 void refresh();
 scheduleMidnight();
 
-$("appearance").addEventListener("change", () =>
-  mutate(
-    { type: "updateSettings", settings: { appearance: $("appearance").value } },
-    "Appearance saved.",
-  ),
-);
 $("reset-text").addEventListener("input", controls);
 $("retry-migration").addEventListener("click", () =>
   mutate({ type: "retryMigration" }, "Migration retried."),
@@ -541,6 +542,8 @@ $("history-button").addEventListener("click", () => {
   $("settings").hidden = true;
   $("history").hidden = false;
   $("settings-button").hidden = true;
+  $("theme-button").hidden = true;
+  closeTheme();
   $("back-button").hidden = false;
   renderHistory();
   $("back-button").focus();
@@ -658,12 +661,37 @@ $("confirm-import").addEventListener("click", async () => {
   cancelImport();
 });
 
-addFeature("accents", "Custom accents");
-$("accent").addEventListener("change", () =>
-  mutate(
-    { type: "updateSettings", settings: { accent: $("accent").value } },
-    "Accent saved.",
-  ),
-);
-
 addFeature("shortcut", "Keyboard shortcut (Alt+Shift+A)");
+
+function closeTheme(focus = false) {
+  $("theme-popover").hidden = true;
+  $("theme-button").setAttribute("aria-expanded", "false");
+  if (focus) $("theme-button").focus();
+}
+$("theme-button").addEventListener("click", () => {
+  if (!$("theme-popover").hidden) return closeTheme(true);
+  $("theme-popover").hidden = false;
+  $("theme-button").setAttribute("aria-expanded", "true");
+  $("theme-popover button[aria-pressed='true']").focus();
+});
+document.addEventListener("pointerdown", (event) => {
+  if (!$("theme-popover").contains(event.target) && !$("theme-button").contains(event.target)) closeTheme();
+});
+$("theme-popover").addEventListener("keydown", (event) => {
+  const buttons = [...$("theme-popover").querySelectorAll("button")].filter((b) => !b.disabled);
+  const index = buttons.indexOf(document.activeElement);
+  let next;
+  if (["ArrowRight", "ArrowDown"].includes(event.key)) next = (index + 1) % buttons.length;
+  if (["ArrowLeft", "ArrowUp"].includes(event.key)) next = (index + buttons.length - 1) % buttons.length;
+  if (event.key === "Home") next = 0;
+  if (event.key === "End") next = buttons.length - 1;
+  if (next !== undefined && buttons.length) { event.preventDefault(); buttons[next].focus(); }
+});
+$("theme-popover").addEventListener("click", (event) => {
+  const button = event.target.closest("button");
+  if (!button) return;
+  const settings = button.dataset.appearance
+    ? { appearance: button.dataset.appearance }
+    : { accent: button.dataset.accent, ...(state.settings.appearance.startsWith("amoled-") ? { appearance: "dark" } : {}) };
+  void mutate({ type: "updateSettings", settings }, "Theme saved.");
+});

@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.1.1 — 2026-11-17
+
+- Keep Apply independent of optional notes, preserving the original draft through additional clicks and failed saves. Move notes below dashboard content.
+- Require Company and Role (120 characters each) for notes; remove Tag inputs while preserving legacy tags and the CSV tag column.
+- Show complete notes as compact expandable History summaries, filter before batches of 50, and preserve expansion and unsaved edits across refreshes.
+- Put the Settings heading and daily goal first with aligned goal controls.
+- Move appearance and Lime/Aqua/Amber accents to a keyboard-accessible homepage palette. Add AMOLED Yellow, Red, and Green with immediate persistence and failed-write rollback.
+- Display Chrome’s actual shortcut assignment, link configuration, and handle the assigned combination in the popup outside text fields with shared worker repeat protection.
+- Retain schema version 2, existing defaults and history, and storage-only permissions.
+
 ## 1.1.0 — 2026-11-17
 
 - Redesign the popup with bundled fonts, rounded cards, daily goal ring, four statistics, and compact chart/activity.

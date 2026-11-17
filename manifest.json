@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Huntdeck",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "One click for every application. Track your job hunt privately, on your device.",
   "permissions": ["storage"],
   "action": {

@@ -2,28 +2,27 @@
   <img src="icons/icon-128.png" width="80" alt="Huntdeck icon" />
   <h1>Huntdeck</h1>
   <p><strong>One click for every application.</strong><br>A small space for your next big move.</p>
-  <p><img src="https://img.shields.io/badge/version-1.1.0-c3f56b" alt="Version 1.1.0" /> <img src="https://img.shields.io/badge/privacy-local_only-c3f56b" alt="Local only" /> <img src="https://img.shields.io/badge/Chrome-Manifest_V3-6be6ed" alt="Chrome Manifest V3" /></p>
+  <p><img src="https://img.shields.io/badge/version-1.1.1-c3f56b" alt="Version 1.1.1" /> <img src="https://img.shields.io/badge/privacy-local_only-c3f56b" alt="Local only" /> <img src="https://img.shields.io/badge/Chrome-Manifest_V3-6be6ed" alt="Chrome Manifest V3" /></p>
   <p><a href="#installation">Install unpacked</a> · <a href="#usage">Usage</a> · <a href="#privacy-and-backups">Privacy & backups</a> · <a href="CHANGELOG.md">Changelog</a></p>
 </div>
 
 ## Features
 
 - A 176px daily progress ring, immediate counts, four statistic cards, seven-day chart, and five recent active dates in a scrollable region.
-- System, Light, and Dark appearance; bundled Inter and Space Grotesk; visible keyboard focus and reduced motion.
-- A dedicated History view, newest first, with 50 entries per batch.
-- Nine optional tools. Only **Streaks** and **Toolbar badge** start enabled:
+- System, Light, Dark, and three AMOLED presets in the homepage palette; bundled Inter and Space Grotesk; visible keyboard focus and reduced motion.
+- Compact, expandable History for entries with both Company and Role, newest first, with 50 noted entries per batch. Every application remains counted and exportable.
+- Eight optional tools. Only **Streaks** and **Toolbar badge** start enabled:
 
 | Tool              | What it does                                                                                                                                            |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Streaks           | Counts active days, with one missed completed day allowed per Monday–Sunday week. Rest days never add to the count; unfinished today does not break it. |
 | Toolbar badge     | Displays today's count, including zero. Disable to clear it.                                                                                            |
 | Heatmap           | Five Monday-start weeks, with zero, one, two–four, and five-plus intensity levels.                                                                      |
-| Quick notes       | Company, Role, and Tag after saving, with limits of 120, 120, and 80 characters. Edit later in History.                                                 |
+| Quick notes       | Optional Company and Role after logging (120 characters each); both are required to save a note. Edit later in History.                                                 |
 | Pipeline          | Applied, Interview, Offer, and Rejected for noted entries, with a summary and status-change timestamps.                                                 |
 | Milestones        | Earn 10, 50, 100, and 250 application achievements. Receipts survive history reset.                                                                     |
 | CSV import        | Preview additions and duplicate UUIDs, then confirm. Local entries win.                                                                                 |
-| Custom accents    | Lime, Aqua, or Amber, independently of appearance.                                                                                                      |
-| Keyboard shortcut | Enable **Alt+Shift+A** to log through the same storage queue, with repeat protection.                                                                   |
+| Keyboard shortcut | Shows Chrome’s actual assigned key and enabled state. Worker and popup logging share the storage queue and repeat protection.                                                                   |
 
 Switching a tool off hides its controls and retains its data. Notifications, weekly summaries, and holiday pauses are future ideas.
 
@@ -40,11 +39,13 @@ No build step is required. After pulling updates, click **Reload** on Huntdeck's
 
 Click **+1 Applied** after sending an application. Counts update immediately; “Saved. Keep going!” appears after a successful storage write. Failed writes roll back the count. The button stays locked during saving and for at least 400ms after clicking. The ring pulses only when a saved application crosses the goal.
 
-**Undo last** removes the entry with the newest timestamp, using storage order to break ties. **Recent activity → View history** opens complete history. If Quick notes is enabled, Save or Skip the optional form after logging; closing the popup leaves the application intact.
+**Undo last** removes the entry with the newest timestamp, using storage order to break ties. **Recent activity → View history** opens compact Company/Role summaries with status. Expand a row for recording time, editing, and enabled pipeline controls. Entries without both trimmed fields stay stored, counted, undoable, and included in exports. Expansion and unsaved edits survive refreshes. If Quick notes is enabled, the editor appears below dashboard content. Additional Apply clicks count without replacing the first draft. Save attaches notes to that original application without adding a count; failed saves retain the draft. Skip or closing the popup leaves the count intact (unsaved text is not persisted across popup closure).
 
-Open **Settings** for appearance, optional tools, daily goal, CSV tools, milestones, and About. New goals accept whole numbers from **1–200**; existing goals up to 999 remain until explicitly edited. Reset requires typing **RESET**. It removes applications while preserving the goal, settings, and earned milestones. Export first if needed.
+Use the **palette beside Settings** for immediate, persistent theme choices. System/Light/Dark use the saved Lime/Aqua/Amber accent. AMOLED Yellow, Red, and Green use black page/cards, white text, gray muted text and borders, and their named bright action fill with black action text. They keep success/streak colors independent and retain your ordinary accent. Choosing an ordinary swatch from AMOLED switches to Dark. Use arrows/Home/End to move between palette choices, Enter/Space to select, and Escape or an outside click to dismiss. Failed writes roll back the selection.
 
-Reassign the optional shortcut at `chrome://extensions/shortcuts`. Chrome or OS conflicts may prevent the suggested key from being assigned. Toolbar counts refresh at startup, extension activity, storage changes, and midnight while the popup is open. **Idle midnight refresh is not guaranteed** because Huntdeck does not use alarms.
+Open **Settings** for the daily goal, optional tools, CSV tools, milestones, and About. New goals accept whole numbers from **1–200**; existing goals up to 999 remain until explicitly edited. Reset requires typing **RESET**. It removes applications while preserving the goal, settings, and earned milestones. Export first if needed.
+
+Enable **Keyboard shortcut** in Settings and use **Configure shortcut** to open `chrome://extensions/shortcuts`. Settings shows the assigned combination or **Not assigned**. Reassign the optional shortcut there. Chrome or OS conflicts may prevent the suggested key from being assigned. Toolbar counts refresh at startup, extension activity, storage changes, and midnight while the popup is open. **Idle midnight refresh is not guaranteed** because Huntdeck does not use alarms.
 
 Counts group timestamps in your current local timezone. Weeks start on Monday; calendar calculations handle daylight-saving transitions. The original recording-local date remains available in backups even if you change timezones. Huntdeck records clicks and does not inspect websites.
 
@@ -108,6 +109,14 @@ npm run test:browser
 Node tests cover migration preservation/failure/retry, ISO timestamps, legacy goals, serialized writes, corrupted history protection, calendar boundaries/DST/timezones, streak rest days, heatmap boundaries, notes/status changes, milestone receipts, CSV round trips/deduplication, and shortcut repeat protection.
 
 Browser checks load the real extension into an isolated Chromium profile and open the popup document at 380×600. They exercise optimistic updates, write rollback, settings, toggles, themes/accents, keyboard focus, reduced motion, CSV tools, History editing, badge updates, the shortcut handler path, and persistence after browser restart. They check contrast, overflow, and absence of external HTTP requests. OS-level shortcut delivery and toolbar popup placement should also be checked manually after installation.
+
+After updating to 1.1.1:
+
+1. Open `chrome://extensions`, click **Reload** on Huntdeck, and reopen its toolbar popup. Confirm About shows **v1.1.1**.
+2. In Settings, enable Keyboard shortcut and check the displayed key. If **Not assigned**, click **Configure shortcut** and assign an available combination.
+3. Close the popup, focus a normal Chrome tab, and press that combination once. Reopen Huntdeck and confirm one added application.
+4. With the popup focused outside inputs, press it once and confirm one added application; hold/repeat rapidly and check duplicate suppression. While typing Company/Role or a goal, the popup handler must not log.
+5. Disable Keyboard shortcut and verify the key no longer adds an application. Native command delivery and conflicts depend on Chrome and the OS.
 
 Regenerate icons with `npm run icons` (Python 3 standard library).
 

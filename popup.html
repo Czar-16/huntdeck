@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="dark" />
+    <title>Huntdeck</title>
+    <link rel="stylesheet" href="popup.css" />
+    <script type="module" src="popup.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#" id="home-link" aria-label="Huntdeck dashboard"
+        ><img src="icons/icon-32.png" width="28" height="28" alt="" /><span
+          >huntdeck<span class="brand-dot">.</span></span
+        ></a
+      >
+      <button
+        class="icon-button"
+        id="settings-button"
+        aria-label="Open settings"
+        title="Settings"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="m9.5 3-.7 2.2-2 .9-2.2-.5-2 3.4 1.5 1.7v2.6l-1.5 1.7 2 3.4 2.2-.5 2 .9.7 2.2h4l.7-2.2 2-.9 2.2.5 2-3.4-1.5-1.7v-2.6L20.9 9l-2-3.4-2.2.5-2-.9L14 3z"
+          />
+          <circle cx="11.75" cy="12" r="3" />
+        </svg>
+      </button>
+      <button
+        class="icon-button"
+        id="back-button"
+        aria-label="Back to dashboard"
+        hidden
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m14 6-6 6 6 6M8 12h12" />
+        </svg>
+      </button>
+    </header>
+
+    <aside
+      id="data-warning"
+      class="notice warning"
+      role="status"
+      hidden
+    ></aside>
+    <p
+      id="message"
+      class="notice"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      Loading Huntdeck…
+    </p>
+
+    <main id="dashboard" aria-busy="true">
+      <section class="hero" aria-labelledby="total-label">
+        <div class="eyebrow" id="total-label">
+          YOUR NEXT CHAPTER STARTS HERE
+        </div>
+        <div class="total" id="total">—</div>
+        <p class="muted">applications sent. opportunities ahead.</p>
+        <button class="apply-button" id="apply-button" disabled>
+          <span aria-hidden="true">＋</span> 1 Applied
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h14m-6-6 6 6-6 6" />
+          </svg>
+        </button>
+        <div class="action-foot">
+          <span class="local-label"
+            ><span class="status-dot"></span> Just you. Just this device.</span
+          ><button class="text-button" id="undo-button" disabled>
+            ↶ Undo last
+          </button>
+        </div>
+      </section>
+
+      <section class="stats" aria-label="Application totals">
+        <div>
+          <span class="stat-label">Today</span><strong id="today">—</strong>
+        </div>
+        <div>
+          <span class="stat-label">This week</span><strong id="week">—</strong>
+        </div>
+        <div>
+          <span class="stat-label">This month</span
+          ><strong id="month">—</strong>
+        </div>
+      </section>
+
+      <section class="goal-section" aria-labelledby="goal-heading">
+        <div class="section-heading">
+          <h2 id="goal-heading">Daily goal</h2>
+          <span id="goal-label">— / 10</span>
+        </div>
+        <div
+          class="progress"
+          id="goal-progress"
+          role="progressbar"
+          aria-label="Daily application goal"
+          aria-valuemin="0"
+          aria-valuemax="10"
+          aria-valuenow="0"
+        >
+          <div id="goal-fill"></div>
+        </div>
+        <p class="small muted" id="goal-message">One application at a time.</p>
+      </section>
+
+      <section class="chart-section" aria-labelledby="chart-heading">
+        <div class="section-heading">
+          <h2 id="chart-heading">The last 7 days</h2>
+          <span class="small muted" id="chart-total">— applications</span>
+        </div>
+        <div
+          class="chart"
+          id="chart"
+          role="img"
+          aria-label="Loading seven-day application chart"
+        ></div>
+      </section>
+
+      <section class="activity-section" aria-labelledby="activity-heading">
+        <div class="section-heading">
+          <h2 id="activity-heading">Recent activity</h2>
+          <span class="small muted">Last 3 active days</span>
+        </div>
+        <div id="activity"><p class="empty">Loading your applications…</p></div>
+      </section>
+    </main>
+
+    <main id="settings" hidden>
+      <div class="settings-heading">
+        <div class="eyebrow">MAKE IT YOURS</div>
+        <h1>Settings</h1>
+      </div>
+      <section class="settings-card">
+        <h2>Set your daily goal</h2>
+        <p class="small muted">A little consistency goes a long way.</p>
+        <form id="goal-form">
+          <label class="sr-only" for="daily-goal"
+            >Daily application goal (1 to 999)</label
+          ><input
+            id="daily-goal"
+            type="number"
+            min="1"
+            max="999"
+            step="1"
+            value="10"
+            required
+          /><button
+            class="secondary-button"
+            id="save-goal"
+            type="submit"
+            disabled
+          >
+            Save goal
+          </button>
+        </form>
+      </section>
+      <section class="settings-card">
+        <h2>Your data, in your hands</h2>
+        <p class="small muted">Download your complete application history.</p>
+        <button class="secondary-button full" id="export-button" disabled>
+          ↓ Export CSV
+        </button>
+      </section>
+      <section class="settings-card">
+        <h2>A fresh start</h2>
+        <p class="small muted">
+          Delete all applications. Your daily goal stays.
+        </p>
+        <button class="danger-button full" id="reset-button" disabled>
+          Reset history
+        </button>
+        <div
+          class="reset-confirm"
+          id="reset-confirm"
+          hidden
+          role="group"
+          aria-labelledby="reset-question"
+        >
+          <p id="reset-question">
+            Delete all application history? This cannot be undone. Export a copy
+            first if you need one.
+          </p>
+          <div class="confirm-actions">
+            <button class="secondary-button" id="cancel-reset">Cancel</button
+            ><button class="danger-button" id="confirm-reset">
+              Delete history
+            </button>
+          </div>
+        </div>
+      </section>
+      <section class="about">
+        <div class="section-heading">
+          <h2>About Huntdeck</h2>
+          <span class="small muted">v1.0.0</span>
+        </div>
+        <p class="small muted">
+          A small space for your next big move. No accounts, no analytics, no
+          servers. Everything stays in this Chrome profile.
+        </p>
+        <p class="small muted">
+          Removing the extension deletes its local data. Export a CSV to keep a
+          backup.
+        </p>
+      </section>
+    </main>
+    <footer>KEEP GOING. YOU’RE BUILDING MOMENTUM.</footer>
+  </body>
+</html>

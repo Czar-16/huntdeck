@@ -1,0 +1,12 @@
+{
+  "name": "huntdeck",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A private, local-only job application counter for Chrome.",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "test:browser": "node tests/browser.mjs",
+    "icons": "python3 scripts/generate-icons.py"
+  }
+}

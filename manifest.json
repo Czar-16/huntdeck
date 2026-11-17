@@ -3,9 +3,11 @@
   "name": "Huntdeck",
   "version": "1.0.0",
   "description": "One click for every application. Track your job hunt privately, on your device.",
-  "permissions": ["storage"],
+  "permissions": [
+    "storage"
+  ],
   "action": {
-    "default_title": "Huntdeck — application tracker",
+    "default_title": "Huntdeck \u2014 application tracker",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon-16.png",
@@ -20,8 +22,19 @@
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "background": { "service_worker": "background.js", "type": "module" },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none'; connect-src 'none'"
+  },
+  "commands": {
+    "log-application": {
+      "suggested_key": {
+        "default": "Alt+Shift+A"
+      },
+      "description": "Log an application (enable in Huntdeck Settings)"
+    }
   }
 }

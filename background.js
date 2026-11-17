@@ -23,3 +23,5 @@ chrome.runtime.onStartup.addListener(refreshBadge);
 chrome.runtime.onInstalled.addListener(refreshBadge);
 chrome.storage.onChanged.addListener((changes, area) => { if(area === "local") refreshBadge(); });
 refreshBadge();
+
+chrome.commands.onCommand.addListener(command => { if (command === "log-application") dispatch({type:"shortcutLog"}).then(updateBadge).catch(error => console.warn(error.message)); });

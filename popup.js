@@ -456,3 +456,5 @@ $("confirm-import").addEventListener("click", async () => { if (!importSource) r
 
 addFeature("accents", "Custom accents");
 $("accent").addEventListener("change", () => mutate({type:"updateSettings",settings:{accent:$("accent").value}}, "Accent saved."));
+
+addFeature("shortcut", "Keyboard shortcut (Alt+Shift+A)");

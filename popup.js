@@ -282,7 +282,7 @@ async function mutate(message, success, optimistic = false) {
   render();
   try {
     state = await request(message);
-    if (message.type === "addApplication" && state.settings.notes) {
+    if (message.type === "addApplication" && state.savedId && state.settings.notes && !noteId) {
       noteId = state.savedId;
       $("quick-note-form").replaceChildren(
         ...noteFields({}, async (note) => {
@@ -291,7 +291,10 @@ async function mutate(message, success, optimistic = false) {
       );
       $("quick-note").hidden = false;
     }
-    if (message.type === "updateNote") $("quick-note").hidden = true;
+    if (message.type === "updateNote" && message.id === noteId) {
+      noteId = undefined;
+      $("quick-note").hidden = true;
+    }
     if (message.type === "previewImport") {
       $("import-summary").textContent =
         `${state.importPreview.additions} additions · ${state.importPreview.duplicates} duplicates. Existing entries are kept.`;
@@ -492,13 +495,13 @@ function noteFields(entry, save) {
   for (const [key, limit] of [
     ["company", 120],
     ["role", 120],
-    ["tag", 80],
   ]) {
     const label = document.createElement("label");
     label.textContent = key[0].toUpperCase() + key.slice(1);
     const input = document.createElement("input");
     input.name = key;
     input.maxLength = limit;
+    input.required = true;
     input.value = entry[key] || "";
     label.append(input);
     nodes.push(label);
@@ -509,6 +512,13 @@ function noteFields(entry, save) {
   button.textContent = "Save note";
   button.addEventListener("click", (event) => {
     event.preventDefault();
+    const form = button.closest("form");
+    for (const label of nodes) {
+      const input = label.lastChild;
+      input.setCustomValidity(input.value.trim() ? "" : "Enter a company and role.");
+      input.addEventListener("input", () => input.setCustomValidity(""), { once: true });
+    }
+    if (!form.reportValidity()) return;
     save(
       Object.fromEntries(
         nodes.map((label) => [label.lastChild.name, label.lastChild.value]),

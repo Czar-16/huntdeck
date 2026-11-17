@@ -324,3 +324,18 @@ test("shortcut is opt-in and repeated commands share serialized repeat protectio
     [1, 1, 1, 1, 1],
   );
 });
+
+test("notes require company and role, preserve legacy tags, and never add a count", async () => {
+  const f = fixture();
+  await f.dispatch({ type: "updateSettings", settings: { notes: true } });
+  const { savedId } = await f.dispatch({ type: "addApplication" });
+  for (const note of [{ company: " ", role: "Dev" }, { company: "Co", role: "" }])
+    await assert.rejects(f.dispatch({ type: "updateNote", id: savedId, note }), /required/);
+  await f.dispatch({ type: "updateNote", id: savedId, note: { company: "Co", role: "Dev", tag: "legacy" } });
+  f.failWrite();
+  await assert.rejects(f.dispatch({ type: "updateNote", id: savedId, note: { company: "New", role: "Dev" } }), /not saved/);
+  assert.equal(f.data().applications[0].company, "Co");
+  const result = await f.dispatch({ type: "updateNote", id: savedId, note: { company: "New", role: "Dev" } });
+  assert.equal(result.applications.length, 1);
+  assert.equal(result.applications[0].tag, "legacy");
+});

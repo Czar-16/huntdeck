@@ -1,3 +1,4 @@
+import { matchesShortcut } from "./lib/shortcut.js";
 import {
   STORAGE_KEYS,
   heatmap,
@@ -11,6 +12,7 @@ import {
 
 const $ = (id) => document.getElementById(id);
 let state;
+let assignedShortcut = "";
 let historyLimit = 50;
 let noteId;
 let importSource;
@@ -283,7 +285,7 @@ async function mutate(message, success, optimistic = false) {
   render();
   try {
     state = await request(message);
-    if (message.type === "addApplication" && state.savedId && state.settings.notes && !noteId) {
+    if (["addApplication", "shortcutLog"].includes(message.type) && state.savedId && state.settings.notes && !noteId) {
       noteId = state.savedId;
       $("quick-note-form").replaceChildren(
         ...noteFields({}, async (note) => {
@@ -459,6 +461,7 @@ for (const [id, delta] of [
   });
 
 function renderFeatures() {
+  $("shortcut-assignment").textContent = `${state.settings.shortcut ? "Enabled" : "Disabled"} · ${assignedShortcut || "Not assigned"}`;
   for (const input of $("feature-toggles").querySelectorAll("input")) {
     input.checked = state.settings[input.name];
     input.disabled =
@@ -661,7 +664,29 @@ $("confirm-import").addEventListener("click", async () => {
   cancelImport();
 });
 
-addFeature("shortcut", "Keyboard shortcut (Alt+Shift+A)");
+addFeature("shortcut", "Keyboard shortcut");
+const assignment = document.createElement("p");
+assignment.id = "shortcut-assignment";
+assignment.className = "small muted";
+const configure = document.createElement("button");
+configure.className = "text-button";
+configure.textContent = "Configure shortcut ↗";
+configure.addEventListener("click", () => chrome.tabs.create({ url: "chrome://extensions/shortcuts" }));
+$("feature-toggles").append(assignment, configure);
+async function readShortcut() {
+  try {
+    assignedShortcut = (await chrome.commands.getAll()).find((command) => command.name === "log-application")?.shortcut || "";
+    if (state) renderFeatures();
+  } catch { assignedShortcut = ""; }
+}
+void readShortcut();
+window.addEventListener("focus", () => void readShortcut());
+document.addEventListener("keydown", (event) => {
+  if (!state?.settings.shortcut || !matchesShortcut(event, assignedShortcut) ||
+      event.target.closest("input, textarea, select, [contenteditable]:not([contenteditable='false']), [role='textbox']")) return;
+  event.preventDefault();
+  void mutate({ type: "shortcutLog" }, "Saved. Keep going!", true);
+});
 
 function closeTheme(focus = false) {
   $("theme-popover").hidden = true;

@@ -830,7 +830,7 @@ body {
   padding: 6px;
   margin-top: 4px;
 }
-.notice:not(.error) {
+#message:not(.error) {
   color: var(--success);
 }
 .status-dot {

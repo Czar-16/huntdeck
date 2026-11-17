@@ -41,6 +41,7 @@ async function open(base) {
   await page.waitForFunction(
     () => document.getElementById("total").textContent !== "—",
   );
+  await page.evaluate(() => document.fonts.ready);
   return page;
 }
 async function value(page, id, expected) {
@@ -95,6 +96,10 @@ try {
   }));
   assert.equal(metrics.width, 380);
   assert.ok(metrics.scrollWidth <= metrics.viewport);
+  assert.ok(
+    metrics.contentHeight <= 600,
+    `Default content height ${metrics.contentHeight}`,
+  );
   assert.ok(contrast(metrics.muted, metrics.background) >= 4.5);
   assert.ok(contrast(metrics.buttonText, metrics.buttonBackground) >= 4.5);
   console.log("Layout and contrast:", metrics);
@@ -120,7 +125,7 @@ try {
   assert.equal(await page.locator("#total").textContent(), "1");
   assert.equal(await page.locator("#apply-button").isDisabled(), true);
   assert.doesNotMatch(await page.locator("#message").textContent(), /saved/);
-  await value(page, "message", "Application saved. Keep going!");
+  await value(page, "message", "Saved. Keep going!");
   await ready(page);
   assert.equal(
     (await worker.evaluate(() => chrome.storage.local.get("applications")))
@@ -196,14 +201,13 @@ try {
   await page.keyboard.press("Tab");
   assert.equal(
     await page.evaluate(() => document.activeElement.id),
-    "daily-goal",
+    "feature-streaks",
   );
-  const focus = await page
-    .locator("#daily-goal")
-    .evaluate((el) => ({
-      style: getComputedStyle(el).outlineStyle,
-      width: getComputedStyle(el).outlineWidth,
-    }));
+  await page.locator("#daily-goal").focus();
+  const focus = await page.locator("#daily-goal").evaluate((el) => ({
+    style: getComputedStyle(el).outlineStyle,
+    width: getComputedStyle(el).outlineWidth,
+  }));
   assert.deepEqual(focus, { style: "solid", width: "2px" });
   const downloadEvent = page.waitForEvent("download");
   await page.locator("#export-button").click();
@@ -257,7 +261,7 @@ try {
   });
   await value(page, "total", "8");
   await value(page, "today", "4");
-  assert.equal(await page.locator(".activity-row").count(), 3);
+  assert.equal(await page.locator(".activity-row").count(), 5);
   assert.equal(
     (await page.locator(".activity-times").first().textContent()).split(" · ")
       .length,
@@ -277,6 +281,203 @@ try {
       .locator("#apply-button")
       .evaluate((el) => getComputedStyle(el).transitionDuration),
     "0s",
+  );
+
+  // Every optional tool is controlled by a persistent setting.
+  await page.locator("#settings-button").click();
+  const toolKeys = [
+    "streaks",
+    "badge",
+    "heatmap",
+    "notes",
+    "pipeline",
+    "milestones",
+    "csvImport",
+    "accents",
+    "shortcut",
+  ];
+  async function toggle(key, enabled) {
+    await page.locator(`#feature-${key}`).setChecked(enabled);
+    await page.waitForFunction(
+      async ({ key, enabled }) =>
+        (await chrome.storage.local.get("settings")).settings[key] === enabled,
+      { key, enabled },
+    );
+    await page.waitForFunction(
+      () => !document.getElementById("daily-goal").disabled,
+    );
+  }
+  for (const key of toolKeys) {
+    await toggle(key, false);
+    await toggle(key, true);
+  }
+  assert.equal(
+    await worker.evaluate(() => chrome.action.getBadgeText({})),
+    "4",
+  );
+  await toggle("badge", false);
+  await page.waitForFunction(
+    async () => (await chrome.action.getBadgeText({})) === "",
+  );
+  await toggle("badge", true);
+  for (const mode of ["light", "dark", "system"]) {
+    await page.locator("#appearance").selectOption(mode);
+    await page.waitForFunction(
+      (mode) => document.documentElement.dataset.theme === mode,
+      mode,
+    );
+    for (const accent of ["lime", "aqua", "amber"]) {
+      await page.locator("#accent").selectOption(accent);
+      await page.waitForFunction(
+        (accent) => document.documentElement.dataset.accent === accent,
+        accent,
+      );
+      const colors = await page.evaluate(() => {
+        const root = getComputedStyle(document.documentElement);
+        return [
+          root.getPropertyValue("--bg"),
+          root.getPropertyValue("--muted"),
+          root.getPropertyValue("--green"),
+        ].map((color) => {
+          const el = document.createElement("span");
+          el.style.color = color;
+          document.body.append(el);
+          const value = getComputedStyle(el).color;
+          el.remove();
+          return value;
+        });
+      });
+      assert.ok(
+        contrast(colors[1], colors[0]) >= 4.5,
+        `${mode}/${accent} muted contrast`,
+      );
+      assert.ok(
+        contrast(colors[2], colors[0]) >= 4.5,
+        `${mode}/${accent} accent contrast`,
+      );
+    }
+  }
+  await page.locator("#back-button").click();
+  assert.equal(await page.locator(".heat").count(), 35);
+  await page.locator("#apply-button").click();
+  await ready(page);
+  assert.equal(await page.locator("#quick-note").isVisible(), true);
+  await page
+    .locator('#quick-note-form input[name="company"]')
+    .fill("<b>Plain company</b>");
+  await page.locator('#quick-note-form input[name="role"]').fill("Engineer");
+  await page.locator('#quick-note-form input[name="tag"]').fill("Remote");
+  await page.locator("#quick-note-form button").click();
+  await value(page, "message", "Note saved.");
+  await page.locator("#history-button").click();
+  assert.equal(await page.locator(".history-entry").count(), 9);
+  assert.equal(
+    await page
+      .locator(".history-entry")
+      .first()
+      .locator('input[name="company"]')
+      .inputValue(),
+    "<b>Plain company</b>",
+  );
+  await page
+    .locator(".history-entry")
+    .first()
+    .locator("select")
+    .selectOption("Interview");
+  await value(page, "message", "Status saved.");
+  await page
+    .locator(".history-entry")
+    .first()
+    .locator('input[name="tag"]')
+    .fill("Edited");
+  await page.locator(".history-entry").first().locator("button").click();
+  await value(page, "message", "Note saved.");
+  await page.locator("#back-button").click();
+  const beforeShortcut = Number(await page.locator("#total").textContent());
+  await page.evaluate(async () => {
+    await chrome.runtime.sendMessage({
+      type: "updateSettings",
+      settings: { shortcut: true },
+    });
+  });
+  // Same handler path as the command listener, with concurrent repeat protection.
+  await new Promise((resolve) => setTimeout(resolve, 450));
+  await page.evaluate(async () => {
+    await Promise.all(
+      Array.from({ length: 5 }, () =>
+        chrome.runtime.sendMessage({ type: "shortcutLog" }),
+      ),
+    );
+  });
+  await value(page, "total", String(beforeShortcut + 1));
+  assert.equal(
+    await worker.evaluate(
+      () =>
+        chrome.runtime.getManifest().commands["log-application"].suggested_key
+          .default,
+    ),
+    "Alt+Shift+A",
+  );
+  await page.locator("#settings-button").click();
+  const { csv: encodeCSV } = await import("../lib/data.js");
+  const existing = (
+    await worker.evaluate(() => chrome.storage.local.get("applications"))
+  ).applications;
+  const added = {
+    id: "12345678-1234-4123-8123-123456789012",
+    date: "2026-01-01",
+    timestamp: "2026-01-01T12:00:00.000Z",
+    company: 'CSV, "Company"',
+    role: "Dev",
+    tag: "Import",
+    pipeline: "Applied",
+    status_changed_at: "2026-01-01T12:00:00.000Z",
+  };
+  const backup = encodeCSV([existing[0], added]);
+  const upload = {
+    name: "backup.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(backup),
+  };
+  await page.locator("#import-file").setInputFiles(upload);
+  await page.waitForFunction(() =>
+    document
+      .getElementById("import-summary")
+      .textContent.includes("1 additions · 1 duplicates"),
+  );
+  await page.locator("#cancel-import").click();
+  assert.equal(
+    (await worker.evaluate(() => chrome.storage.local.get("applications")))
+      .applications.length,
+    existing.length,
+  );
+  await page.locator("#import-file").setInputFiles(upload);
+  await page.waitForFunction(
+    () => !document.getElementById("import-preview").hidden,
+  );
+  await page.locator("#confirm-import").click();
+  await value(page, "message", "CSV imported.");
+  assert.equal(
+    (await worker.evaluate(() => chrome.storage.local.get("applications")))
+      .applications.length,
+    existing.length + 1,
+  );
+  await page.locator("#back-button").click();
+  await context.close();
+  ({ worker, base } = await launch());
+  page = await open(base);
+  const reopened = await worker.evaluate(() =>
+    chrome.storage.local.get("settings"),
+  );
+  for (const key of toolKeys) assert.equal(reopened.settings[key], true);
+  await page.locator("#history-button").click();
+  assert.equal(
+    await page.locator('.history-entry input[name="company"]').count(),
+    existing.length + 1,
+  );
+  await page.locator("#back-button").click();
+  console.log(
+    "Optional tools, themes, accents, History edits, CSV cancellation/import, badge, shortcut path and restart: passed",
   );
 
   // Recoverable data, blocked corrupt data, and explicit reset recovery.
@@ -305,7 +506,14 @@ try {
     "corrupted",
   );
   await page.locator("#settings-button").click();
+  assert.equal(await page.locator("#reset-button").isDisabled(), true);
+  await worker.evaluate(() => chrome.storage.local.set({ applications: [] }));
+  await page.waitForFunction(
+    () => !document.getElementById("reset-button").disabled,
+  );
   await page.locator("#reset-button").click();
+  assert.equal(await page.locator("#confirm-reset").isDisabled(), true);
+  await page.locator("#reset-text").fill("RESET");
   await page.locator("#confirm-reset").click();
   await value(
     page,
@@ -317,6 +525,90 @@ try {
   await value(page, "goal-label", "0 / 3");
   assert.equal(await page.locator("#undo-button").isDisabled(), true);
   assert.equal(await page.locator("#data-warning").isHidden(), true);
+
+  // Migration write failures remain exportable and retry through the real worker.
+  await worker.evaluate(async () => {
+    globalThis.originalSet = chrome.storage.local.set.bind(
+      chrome.storage.local,
+    );
+    chrome.storage.local.set = async () => {
+      throw new Error("Migration write failure");
+    };
+    await globalThis.originalSet({
+      schemaVersion: 1,
+      applications: [
+        { id: crypto.randomUUID(), timestamp: Date.now(), date: "2026-01-01" },
+      ],
+    });
+  });
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await page.waitForFunction(
+    () => !document.getElementById("retry-migration").hidden,
+  );
+  assert.equal(await page.locator("#apply-button").isDisabled(), true);
+  await page.locator("#settings-button").click();
+  assert.equal(await page.locator("#export-button").isEnabled(), true);
+  assert.equal(
+    (await worker.evaluate(() => chrome.storage.local.get("schemaVersion")))
+      .schemaVersion,
+    1,
+  );
+  await worker.evaluate(() => {
+    chrome.storage.local.set = globalThis.originalSet;
+  });
+  await page.locator("#retry-migration").click();
+  await page.waitForFunction(
+    () => document.getElementById("retry-migration").hidden,
+  );
+  assert.equal(
+    (await worker.evaluate(() => chrome.storage.local.get("schemaVersion")))
+      .schemaVersion,
+    2,
+  );
+  await worker.evaluate(() => chrome.storage.local.set({ schemaVersion: 3 }));
+  await page.waitForFunction(() =>
+    document
+      .getElementById("data-warning")
+      .textContent.includes("newer schema"),
+  );
+  assert.equal(await page.locator("#daily-goal").isDisabled(), true);
+  await worker.evaluate(() =>
+    chrome.storage.local.set({
+      schemaVersion: 2,
+      applications: Array.from({ length: 53 }, (_, n) => ({
+        id: crypto.randomUUID(),
+        timestamp: new Date(Date.now() - n * 1000).toISOString(),
+        date: "2026-01-01",
+      })),
+    }),
+  );
+  await value(page, "total", "53");
+  await page.locator("#back-button").click();
+  await page.locator("#history-button").click();
+  assert.equal(await page.locator(".history-entry").count(), 50);
+  await page.locator("#load-more").click();
+  assert.equal(await page.locator(".history-entry").count(), 53);
+  await page.locator("#back-button").click();
+  await worker.evaluate(() =>
+    chrome.storage.local.set({ applications: [], dailyGoal: 1 }),
+  );
+  await value(page, "total", "0");
+  const beforePositions = await page.locator("#apply-button").boundingBox();
+  await page.locator("#apply-button").click();
+  await ready(page);
+  assert.equal(
+    await page
+      .locator("#goal-progress")
+      .evaluate((el) => el.classList.contains("pulse")),
+    true,
+  );
+  const afterPositions = await page.locator("#apply-button").boundingBox();
+  assert.equal(beforePositions.y, afterPositions.y);
+  await page.locator("#skip-note").click();
+  await worker.evaluate(() =>
+    chrome.storage.local.set({ applications: [], dailyGoal: 3 }),
+  );
+  await value(page, "total", "0");
 
   // A get failure has a clear message and focus retries the read.
   await worker.evaluate(() => {

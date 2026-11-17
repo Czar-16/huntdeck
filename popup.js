@@ -1,4 +1,5 @@
 import {
+  STORAGE_KEYS,
   heatmap,
   streak,
   csv,
@@ -408,10 +409,7 @@ document.addEventListener("keydown", (event) => {
   }
 });
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (
-    area === "local" &&
-    ["applications", "dailyGoal", "settings"].some((key) => key in changes)
-  )
+  if (area === "local" && STORAGE_KEYS.some((key) => key in changes))
     void refresh();
 });
 window.addEventListener("focus", () => {

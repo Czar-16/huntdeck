@@ -14,7 +14,7 @@ import {
 process.env.TZ = "America/New_York";
 const make = (date, index = 0) => ({
   id: `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
-  timestamp: new Date(date).getTime(),
+  timestamp: new Date(date).toISOString(),
   date: localDate(new Date(date)),
 });
 
@@ -22,8 +22,8 @@ test("empty defaults and goal boundaries", () => {
   assert.deepEqual(normalize({}).applications, []);
   assert.equal(normalize({}).dailyGoal, 10);
   assert.deepEqual(normalize({}).warnings, []);
-  for (const goal of [1, 10, 999]) assert.ok(validGoal(goal));
-  for (const goal of [0, -1, 1000, 1.5, NaN, Infinity, "10", null])
+  for (const goal of [1, 10, 200]) assert.ok(validGoal(goal));
+  for (const goal of [0, -1, 201, 1000, 1.5, NaN, Infinity, "10", null])
     assert.equal(validGoal(goal), false);
   assert.equal(normalize({ dailyGoal: "17" }).dailyGoal, 17);
   assert.equal(normalize({ dailyGoal: 0 }).dailyGoal, 10);
@@ -38,7 +38,8 @@ test("normalization preserves valid entries and recording-local dates", () => {
     settings: { theme: "dark" },
   });
   assert.deepEqual(state.applications, [record]);
-  assert.deepEqual(state.settings, { theme: "dark", version: 1 });
+  assert.equal(state.settings.theme, "dark");
+  assert.equal(state.settings.appearance, "system");
   assert.deepEqual(state.warnings, []);
 });
 
@@ -47,7 +48,11 @@ test("repair recoverable timestamps, dates, missing IDs and duplicate IDs determ
   const input = {
     applications: [
       record,
-      { ...record, timestamp: String(record.timestamp), date: "2026-02-30" },
+      {
+        ...record,
+        timestamp: String(Date.parse(record.timestamp)),
+        date: "2026-02-30",
+      },
       { timestamp: "2026-11-17T10:00:00Z" },
     ],
   };
@@ -93,7 +98,7 @@ test("Monday weeks, month and year boundaries, current-local grouping, recent ti
   assert.equal(stats.today, 4);
   assert.equal(stats.week, 5);
   assert.equal(stats.month, 7);
-  assert.equal(stats.recent.length, 3);
+  assert.equal(stats.recent.length, 4);
   assert.equal(stats.recent[0].latest.length, 3);
   assert.equal(stats.recent[0].latest[0].timestamp, apps.at(-1).timestamp);
   assert.equal(statistics(apps, new Date("2026-11-15T23:59:59")).week, 1);
@@ -168,12 +173,12 @@ test("CSV exports all records, ISO instants, recording dates, escaped quotes and
   const output = csv(apps);
   assert.ok(
     output.startsWith(
-      '\uFEFF"application_id","recorded_local_date","timestamp_iso"\r\n',
+      '\uFEFF"application_id","recorded_local_date","timestamp_iso","company","role","tag","pipeline","status_changed_at"\r\n',
     ),
   );
   assert.ok(
     output.includes(
-      '"quoted,""id","2026-11-16","2026-11-16T20:00:00.000Z"\r\n',
+      '"quoted,""id","2026-11-16","2026-11-16T20:00:00.000Z","","","","",""\r\n',
     ),
   );
   assert.equal(output.split("\r\n").length, 4);
@@ -187,9 +192,80 @@ test("repaired IDs cannot collide with a later valid ID", () => {
   const valid = { id: candidate, timestamp, date: "2026-11-17" };
   const state = normalize({ applications: [{ timestamp }, valid] });
   assert.equal(new Set(state.applications.map((app) => app.id)).size, 2);
-  assert.deepEqual(state.applications[1], valid);
+  assert.deepEqual(state.applications[1], {
+    ...valid,
+    timestamp: new Date(timestamp).toISOString(),
+  });
   assert.deepEqual(
     normalize({ applications: state.applications }).warnings,
     [],
   );
+});
+
+test("streaks allow one completed rest day per Monday week and skip unfinished today", async () => {
+  const { streak } = await import("../lib/data.js");
+  const apps = (dates) => dates.map((date, i) => make(`${date}T12:00:00`, i));
+  assert.equal(streak([], new Date("2026-11-17T12:00:00")), 0);
+  assert.equal(
+    streak(apps(["2026-11-16"]), new Date("2026-11-17T12:00:00")),
+    1,
+  );
+  assert.equal(
+    streak(apps(["2026-11-16", "2026-11-18"]), new Date("2026-11-19T12:00:00")),
+    2,
+  );
+  assert.equal(
+    streak(apps(["2026-11-16", "2026-11-19"]), new Date("2026-11-20T12:00:00")),
+    1,
+  );
+  assert.equal(
+    streak(apps(["2026-11-14", "2026-11-17"]), new Date("2026-11-17T12:00:00")),
+    2,
+  );
+});
+
+test("heatmap spans five Monday weeks and disables future calendar dates", async () => {
+  const { heatmap } = await import("../lib/data.js");
+  const result = heatmap(
+    Array.from({ length: 5 }, (_, i) => make("2026-11-17T12:00:00", i)),
+    new Date("2026-11-17T12:00:00"),
+  );
+  assert.equal(result.length, 35);
+  assert.equal(result[0].date, "2026-10-19");
+  assert.equal(result.at(-1).date, "2026-11-22");
+  assert.equal(result.filter((day) => day.future).length, 5);
+  assert.equal(result.find((day) => day.date === "2026-11-17").level, 3);
+});
+
+test("CSV round trips multiline notes, Unicode, quotes and original exports; rejects malformed rows", async () => {
+  const { parseCSV, previewImport } = await import("../lib/data.js");
+  const entry = {
+    ...make("2026-11-17T12:00:00"),
+    company: 'A, "Company"\r\n第二行',
+    role: "Developer",
+    tag: "remote",
+    pipeline: "Interview",
+    status_changed_at: "2026-11-18T10:00:00.000Z",
+  };
+  assert.deepEqual(parseCSV(csv([entry])), [entry]);
+  const original =
+    "application_id,recorded_local_date,timestamp_iso\r\n" +
+    `${entry.id},${entry.date},${entry.timestamp}\r\n`;
+  assert.equal(parseCSV(original)[0].id, entry.id);
+  assert.deepEqual(previewImport(csv([entry, entry]), []), {
+    additions: [entry],
+    duplicates: 1,
+  });
+  assert.deepEqual(previewImport(csv([entry]), [entry]), {
+    additions: [],
+    duplicates: 1,
+  });
+  for (const malformed of [
+    original.replace(entry.id, "bad"),
+    original.replace(entry.date, "2026-02-30"),
+    original.replace(entry.timestamp, "bad"),
+    csv([entry]).replace('"Developer"', '"Developer"bad'),
+    original + '"open',
+  ])
+    assert.throws(() => parseCSV(malformed), /Row \d+:/);
 });

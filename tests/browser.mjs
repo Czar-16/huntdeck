@@ -201,7 +201,7 @@ try {
   await page.keyboard.press("Tab");
   assert.equal(
     await page.evaluate(() => document.activeElement.id),
-    "feature-streaks",
+    "goal-minus",
   );
   await page.locator("#daily-goal").focus();
   const focus = await page.locator("#daily-goal").evaluate((el) => ({
@@ -293,7 +293,6 @@ try {
     "pipeline",
     "milestones",
     "csvImport",
-    "accents",
     "shortcut",
   ];
   async function toggle(key, enabled) {
@@ -320,14 +319,18 @@ try {
     async () => (await chrome.action.getBadgeText({})) === "",
   );
   await toggle("badge", true);
+  await page.locator("#back-button").click();
+  await page.locator("#theme-button").click();
   for (const mode of ["light", "dark", "system"]) {
-    await page.locator("#appearance").selectOption(mode);
+    await page.locator(`#theme-popover [data-appearance="${mode}"]`).click();
+    await ready(page);
     await page.waitForFunction(
       (mode) => document.documentElement.dataset.theme === mode,
       mode,
     );
     for (const accent of ["lime", "aqua", "amber"]) {
-      await page.locator("#accent").selectOption(accent);
+      await page.locator(`#theme-popover [data-accent="${accent}"]`).click();
+      await ready(page);
       await page.waitForFunction(
         (accent) => document.documentElement.dataset.accent === accent,
         accent,
@@ -357,20 +360,71 @@ try {
       );
     }
   }
-  await page.locator("#back-button").click();
+  for (const [preset, fill] of [["yellow", "rgb(255, 255, 0)"], ["red", "rgb(255, 0, 0)"], ["green", "rgb(0, 255, 0)"]]) {
+    await page.locator(`[data-appearance="amoled-${preset}"]`).click();
+    await ready(page);
+    const colors = await page.evaluate(() => ({
+      bg: getComputedStyle(document.body).backgroundColor,
+      fill: getComputedStyle(document.getElementById("apply-button")).backgroundColor,
+      text: getComputedStyle(document.getElementById("apply-button")).color,
+      muted: getComputedStyle(document.getElementById("goal-message")).color,
+    }));
+    assert.deepEqual(colors, { bg: "rgb(0, 0, 0)", fill, text: "rgb(0, 0, 0)", muted: "rgb(176, 176, 176)" });
+    assert.ok(contrast(colors.text, colors.fill) >= 4.5);
+    assert.equal(await page.locator(`[data-appearance="amoled-${preset}"]`).getAttribute("aria-pressed"), "true");
+    const stored = await worker.evaluate(() => chrome.storage.local.get("settings"));
+    assert.equal(stored.settings.appearance, `amoled-${preset}`);
+    assert.equal(stored.settings.accent, "amber");
+  }
+  await page.locator('[data-accent="aqua"]').click();
+  await ready(page);
+  assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), "dark");
+  await worker.evaluate(() => {
+    globalThis.originalSet = chrome.storage.local.set.bind(chrome.storage.local);
+    chrome.storage.local.set = async () => { throw new Error("theme failure"); };
+  });
+  await page.locator('[data-appearance="amoled-red"]').click();
+  await ready(page);
+  assert.equal(await page.evaluate(() => document.documentElement.dataset.theme), "dark");
+  assert.equal(await page.locator('[data-appearance="dark"]').getAttribute("aria-pressed"), "true");
+  await worker.evaluate(() => { chrome.storage.local.set = globalThis.originalSet; });
+  await page.locator('[data-appearance="dark"]').focus();
+  await page.keyboard.press("ArrowRight");
+  assert.equal(await page.evaluate(() => document.activeElement.dataset.accent), "lime");
+  await page.keyboard.press("Escape");
+  assert.equal(await page.locator("#theme-popover").isHidden(), true);
+  assert.equal(await page.evaluate(() => document.activeElement.id), "theme-button");
   assert.equal(await page.locator(".heat").count(), 35);
   await page.locator("#apply-button").click();
   await ready(page);
   assert.equal(await page.locator("#quick-note").isVisible(), true);
+  await page.locator('#quick-note-form input[name="company"]').fill(" ");
+  await page.locator("#quick-note-form button").click();
+  assert.equal(await page.locator("#quick-note").isVisible(), true);
+  assert.equal(await page.locator('#quick-note-form input[name="tag"]').count(), 0);
   await page
     .locator('#quick-note-form input[name="company"]')
     .fill("<b>Plain company</b>");
   await page.locator('#quick-note-form input[name="role"]').fill("Engineer");
-  await page.locator('#quick-note-form input[name="tag"]').fill("Remote");
+  const draftId = await page.evaluate(async () => (await chrome.storage.local.get("applications")).applications.at(-1).id);
+  await page.locator("#apply-button").click();
+  await ready(page);
+  assert.equal(await page.locator('#quick-note-form input[name="company"]').inputValue(), "<b>Plain company</b>");
+  await worker.evaluate(() => { globalThis.originalSet = chrome.storage.local.set.bind(chrome.storage.local); chrome.storage.local.set = async () => { throw new Error("note failure"); }; });
+  await page.locator("#quick-note-form button").click();
+  await page.waitForFunction(() => document.getElementById("message").textContent.includes("not saved"));
+  await ready(page);
+  assert.equal(await page.locator('#quick-note-form input[name="company"]').inputValue(), "<b>Plain company</b>");
+  await worker.evaluate(() => { chrome.storage.local.set = globalThis.originalSet; });
+  const countBeforeNoteSave = await page.locator("#total").textContent();
   await page.locator("#quick-note-form button").click();
   await value(page, "message", "Note saved.");
+  assert.equal(await page.locator("#total").textContent(), countBeforeNoteSave);
   await page.locator("#history-button").click();
-  assert.equal(await page.locator(".history-entry").count(), 9);
+  assert.equal(await page.locator(".history-entry").count(), 1);
+  assert.equal(await page.locator(".history-entry").first().getAttribute("open"), null);
+  await page.locator(".history-entry summary").first().click();
+  assert.equal((await worker.evaluate(() => chrome.storage.local.get("applications"))).applications.find((a) => a.company)?.id, draftId);
   assert.equal(
     await page
       .locator(".history-entry")
@@ -388,8 +442,12 @@ try {
   await page
     .locator(".history-entry")
     .first()
-    .locator('input[name="tag"]')
+    .locator('input[name="role"]')
     .fill("Edited");
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await page.waitForTimeout(100);
+  assert.equal(await page.locator('.history-entry input[name="role"]').inputValue(), "Edited");
+  assert.equal(await page.locator(".history-entry").first().getAttribute("open"), "");
   await page.locator(".history-entry").first().locator("button").click();
   await value(page, "message", "Note saved.");
   await page.locator("#back-button").click();
@@ -400,6 +458,49 @@ try {
       settings: { shortcut: true },
     });
   });
+  await page.evaluate(async () => {
+    globalThis.originalCommands = chrome.commands.getAll.bind(chrome.commands);
+    chrome.commands.getAll = async () => [{ name: "log-application", shortcut: "Ctrl+Shift+Y" }];
+    window.dispatchEvent(new Event("focus"));
+  });
+  await page.locator("#settings-button").click();
+  await value(page, "shortcut-assignment", "Enabled · Ctrl+Shift+Y");
+  await page.locator("#back-button").click();
+  await page.waitForTimeout(450);
+  await page.keyboard.press("Control+Shift+y");
+  await ready(page);
+  await value(page, "total", String(beforeShortcut + 1));
+  await page.locator('#quick-note-form input[name="company"]').focus();
+  await page.keyboard.press("Control+Shift+y");
+  await page.waitForTimeout(450);
+  await value(page, "total", String(beforeShortcut + 1));
+  await page.locator("#skip-note").click();
+  await page.evaluate(() => {
+    chrome.commands.getAll = async () => [{ name: "log-application", shortcut: "" }];
+    window.dispatchEvent(new Event("focus"));
+  });
+  await page.locator("#settings-button").click();
+  await value(page, "shortcut-assignment", "Enabled · Not assigned");
+  await page.locator("#back-button").click();
+  await page.keyboard.press("Control+Shift+y");
+  await page.waitForTimeout(450);
+  await value(page, "total", String(beforeShortcut + 1));
+  await page.evaluate(async () => {
+    chrome.commands.getAll = async () => [{ name: "log-application", shortcut: "Ctrl+Shift+Y" }];
+    window.dispatchEvent(new Event("focus"));
+    await chrome.runtime.sendMessage({ type: "updateSettings", settings: { shortcut: false } });
+  });
+  await page.locator("#settings-button").click();
+  await value(page, "shortcut-assignment", "Disabled · Ctrl+Shift+Y");
+  await page.locator("#back-button").click();
+  await page.keyboard.press("Control+Shift+y");
+  await page.waitForTimeout(450);
+  await value(page, "total", String(beforeShortcut + 1));
+  await page.evaluate(async () => {
+    await chrome.runtime.sendMessage({ type: "updateSettings", settings: { shortcut: true } });
+    chrome.commands.getAll = globalThis.originalCommands;
+    window.dispatchEvent(new Event("focus"));
+  });
   // Same handler path as the command listener, with concurrent repeat protection.
   await new Promise((resolve) => setTimeout(resolve, 450));
   await page.evaluate(async () => {
@@ -409,7 +510,7 @@ try {
       ),
     );
   });
-  await value(page, "total", String(beforeShortcut + 1));
+  await value(page, "total", String(beforeShortcut + 2));
   assert.equal(
     await worker.evaluate(
       () =>
@@ -473,7 +574,7 @@ try {
   await page.locator("#history-button").click();
   assert.equal(
     await page.locator('.history-entry input[name="company"]').count(),
-    existing.length + 1,
+    2,
   );
   await page.locator("#back-button").click();
   console.log(
@@ -575,14 +676,16 @@ try {
   await worker.evaluate(() =>
     chrome.storage.local.set({
       schemaVersion: 2,
-      applications: Array.from({ length: 53 }, (_, n) => ({
+      applications: Array.from({ length: 56 }, (_, n) => ({
         id: crypto.randomUUID(),
         timestamp: new Date(Date.now() - n * 1000).toISOString(),
         date: "2026-01-01",
+        company: n < 3 ? "" : "Company",
+        role: "Engineer",
       })),
     }),
   );
-  await value(page, "total", "53");
+  await value(page, "total", "56");
   await page.locator("#back-button").click();
   await page.locator("#history-button").click();
   assert.equal(await page.locator(".history-entry").count(), 50);

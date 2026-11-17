@@ -1,91 +1,116 @@
-# Huntdeck
+<div align="center">
+  <img src="icons/icon-128.png" width="80" alt="Huntdeck icon" />
+  <h1>Huntdeck</h1>
+  <p><strong>One click for every application.</strong><br>A small space for your next big move.</p>
+  <p><img src="https://img.shields.io/badge/version-1.1.0-c3f56b" alt="Version 1.1.0" /> <img src="https://img.shields.io/badge/privacy-local_only-c3f56b" alt="Local only" /> <img src="https://img.shields.io/badge/Chrome-Manifest_V3-6be6ed" alt="Chrome Manifest V3" /></p>
+  <p><a href="#installation">Install unpacked</a> · <a href="#usage">Usage</a> · <a href="#privacy-and-backups">Privacy & backups</a> · <a href="CHANGELOG.md">Changelog</a></p>
+</div>
 
-**One click for every application.** A compact, private Chrome extension for keeping your job search moving.
+## Features
 
-Huntdeck runs entirely on your device. It uses vanilla JavaScript, HTML, CSS, and Manifest V3, with no accounts, analytics, remote services, or runtime dependencies.
+- A 176px daily progress ring, immediate counts, four statistic cards, seven-day chart, and five recent active dates in a scrollable region.
+- System, Light, and Dark appearance; bundled Inter and Space Grotesk; visible keyboard focus and reduced motion.
+- A dedicated History view, newest first, with 50 entries per batch.
+- Nine optional tools. Only **Streaks** and **Toolbar badge** start enabled:
 
-## Install in Chrome
+| Tool              | What it does                                                                                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Streaks           | Counts active days, with one missed completed day allowed per Monday–Sunday week. Rest days never add to the count; unfinished today does not break it. |
+| Toolbar badge     | Displays today's count, including zero. Disable to clear it.                                                                                            |
+| Heatmap           | Five Monday-start weeks, with zero, one, two–four, and five-plus intensity levels.                                                                      |
+| Quick notes       | Company, Role, and Tag after saving, with limits of 120, 120, and 80 characters. Edit later in History.                                                 |
+| Pipeline          | Applied, Interview, Offer, and Rejected for noted entries, with a summary and status-change timestamps.                                                 |
+| Milestones        | Earn 10, 50, 100, and 250 application achievements. Receipts survive history reset.                                                                     |
+| CSV import        | Preview additions and duplicate UUIDs, then confirm. Local entries win.                                                                                 |
+| Custom accents    | Lime, Aqua, or Amber, independently of appearance.                                                                                                      |
+| Keyboard shortcut | Enable **Alt+Shift+A** to log through the same storage queue, with repeat protection.                                                                   |
 
-1. Clone this repository, or download and extract its ZIP from GitHub.
-2. Open `chrome://extensions` in Chrome.
-3. Turn on **Developer mode**.
-4. Click **Load unpacked** and select the folder containing `manifest.json`.
-5. Open Chrome’s Extensions menu and pin **Huntdeck**.
+Switching a tool off hides its controls and retains its data. Notifications, weekly summaries, and holiday pauses are future ideas.
 
-No build or package installation is required. After updating the files, click **Reload** on Huntdeck’s extension card and reopen the popup.
+## Installation
 
-## Use
+1. [Clone this repository](https://github.com/Czar-16/huntdeck) or use GitHub's **Code → Download ZIP** and extract it.
+2. Open `chrome://extensions` and enable **Developer mode**.
+3. Select **Load unpacked** and choose the folder containing `manifest.json`.
+4. Pin Huntdeck from Chrome's Extensions menu.
 
-- Click **+1 Applied** each time you send an application. The counter updates immediately; the success message appears only after Chrome saves it. Failed saves roll the counter back and show an error.
-- The button stays disabled while saving and for at least 400 milliseconds from the click, preventing accidental double-clicks.
-- **Undo last** immediately removes the entry with the latest timestamp. For equal timestamps, it removes the last stored entry. Empty history disables undo.
-- See your lifetime total, today/week/month totals, daily goal progress, seven-day chart, and your last three active dates. Each date shows its total and up to three latest recording times.
-- Open **Settings** to change your daily goal (a whole number from 1–999; defaults to 10), export your history, or reset it. The back arrow returns to the dashboard; Escape cancels a pending reset or returns from Settings.
-- **Reset history** asks for confirmation and removes every application. Your daily goal stays. **Cancel** or Escape leaves history untouched. Reset cannot be undone.
+No build step is required. After pulling updates, click **Reload** on Huntdeck's extension card and reopen the popup. This repository does not currently provide a Chrome Web Store listing or packaged release.
 
-The popup is 380px wide. Chrome limits popup height; scroll to reach lower content when needed. Buttons and inputs support keyboard navigation and visible focus, and motion respects your system’s reduced-motion preference.
+## Usage
 
-## Dates and counts
+Click **+1 Applied** after sending an application. Counts update immediately; “Saved. Keep going!” appears after a successful storage write. Failed writes roll back the count. The button stays locked during saving and for at least 400ms after clicking. The ring pulses only when a saved application crosses the goal.
 
-All counts are derived from complete application history. Each entry contains a UUID, an epoch-millisecond timestamp, and the local `YYYY-MM-DD` date at recording time.
+**Undo last** removes the entry with the newest timestamp, using storage order to break ties. **Recent activity → View history** opens complete history. If Quick notes is enabled, Save or Skip the optional form after logging; closing the popup leaves the application intact.
 
-Displayed statistics group timestamps in your **current system timezone**. Weeks start on Monday; month totals use the current calendar month. The chart covers seven local calendar dates ending today, including dates with zero applications. Calendar calculations account for daylight-saving transitions rather than assuming each day lasts 24 hours. The popup refreshes on storage changes, focus, visibility changes, and local midnight.
+Open **Settings** for appearance, optional tools, daily goal, CSV tools, milestones, and About. New goals accept whole numbers from **1–200**; existing goals up to 999 remain until explicitly edited. Reset requires typing **RESET**. It removes applications while preserving the goal, settings, and earned milestones. Export first if needed.
 
-Changing timezone can move an entry to a different displayed day. Its original recording-local date remains intact for export. The extension records when you click; it does not inspect websites or automatically detect applications.
+Reassign the optional shortcut at `chrome://extensions/shortcuts`. Chrome or OS conflicts may prevent the suggested key from being assigned. Toolbar counts refresh at startup, extension activity, storage changes, and midnight while the popup is open. **Idle midnight refresh is not guaranteed** because Huntdeck does not use alarms.
 
-## Your data
+Counts group timestamps in your current local timezone. Weeks start on Monday; calendar calculations handle daylight-saving transitions. The original recording-local date remains available in backups even if you change timezones. Huntdeck records clicks and does not inspect websites.
 
-Huntdeck requests only the **storage** permission. It has no content scripts, host permissions, external resources, or network requests. Application history, daily goal, and settings live in `chrome.storage.local`, under `applications`, `dailyGoal`, and `settings`.
+## Screenshots
 
-Data belongs to the current Chrome profile and is **not synced or backed up**. Removing the extension or deleting its profile data deletes the history. Export regularly if you want a backup. Storage is subject to Chrome’s local quota; a failed write produces an error without claiming success. Huntdeck does not request unlimited storage.
+| Dashboard                                               | Settings & History                                           |
+| ------------------------------------------------------- | ------------------------------------------------------------ |
+| Screenshot placeholder — daily ring and recent activity | Screenshot placeholder — optional tools and editable entries |
 
-**Export CSV** creates a local download containing every readable entry, oldest first, with these columns:
+Local browser checks generate screenshots in the ignored `test-results/` folder.
 
-| Column                | Meaning                                        |
-| --------------------- | ---------------------------------------------- |
-| `application_id`      | Unique application UUID                        |
-| `recorded_local_date` | Local date at recording time                   |
-| `timestamp_iso`       | Exact instant in UTC, as an ISO 8601 timestamp |
+## Privacy and backups
 
-The CSV uses quoted, escaped fields, CRLF line endings, and a UTF-8 BOM for spreadsheet compatibility. Empty history exports the header. CSV import is not supported.
+Huntdeck requests only **`storage`**. It has no accounts, analytics, content scripts, host permissions, remote fonts, runtime services, or external requests. README badges above are GitHub documentation images; the installed extension bundles all its resources.
 
-Stored data is validated on read. Recoverable fields (such as a missing ID or recording date) are repaired in memory, with a visible notice, then persisted on your next change. Unreadable history is never silently overwritten: readable entries remain visible and exportable, edits are blocked, and Settings offers an explicit reset. A reset of damaged data permanently discards unreadable records as well. A read failure shows an error; reopening or refocusing the popup retries it.
+History is stored in `chrome.storage.local` under `applications`, `dailyGoal`, and `settings`, plus `schemaVersion: 2`. Data stays in the current Chrome profile. It is not synced or automatically backed up. Removing the extension or deleting profile data removes it. Chrome's local storage quota applies; failed writes are reported.
 
-## Development and verification
+Version 1.1 migrates old timestamps to canonical ISO strings through the service worker's serialized queue. It preserves UUIDs, recording dates, order, existing fields, and legacy goals. Migration validates the complete result before one write and is idempotent. A failed migration leaves stored data untouched, blocks edits, and provides **Retry migration** and CSV export of readable entries. Unreadable history is never discarded by a normal save or reset. A newer, unsupported schema opens read-only; update Huntdeck to edit it.
 
-Requires Node.js 20.11+ for tests. The extension itself needs no Node tooling.
+**Export CSV** includes every readable application, oldest first, with the original columns followed by the new fields:
+
+```text
+application_id,recorded_local_date,timestamp_iso,company,role,tag,pipeline,status_changed_at
+```
+
+Exports use a UTF-8 BOM, quoted fields, escaped quotes, and CRLF row endings. Commas, Unicode, and multiline notes survive round trips. Enable **CSV import** to accept original three-column or extended eight-column Huntdeck exports. Preview does not change history. Confirmation revalidates against current storage and skips duplicate UUIDs, keeping local entries. Malformed files show row-specific errors; files are limited to 5 MB.
+
+Keep CSV backups private: they contain any company names and notes you enter. Exporting readable history cannot recover unreadable records. For damaged storage, keep a copy of the original profile data before attempting repair.
+
+Reminders remain deferred. Adding them later would require `alarms` and `notifications` permissions; neither is requested in this version.
+
+## Tech stack
+
+Vanilla JavaScript ES modules, HTML, CSS, SVG, Manifest V3, and Chrome local storage. No runtime dependencies or build pipeline.
+
+```text
+huntdeck/
+├── manifest.json          # Extension, worker, and shortcut declarations
+├── background.js          # Serialized requests, badge, command listener
+├── popup.html/css/js      # Dashboard, settings, History
+├── lib/data.js            # Validation, calendars, streaks, CSV
+├── lib/store.js           # Migration and authoritative mutations
+├── fonts/                 # Local fonts and OFL notices
+├── icons/                 # Bundled PNG icons
+├── scripts/               # Reproducible icon generator
+└── tests/                 # Node and isolated Chromium checks
+```
+
+## Development and tests
+
+Node.js 20.11+ is required for tests. The extension itself needs no Node tooling.
 
 ```sh
 npm test
-```
-
-The built-in Node test runner covers calendar/week/month boundaries, leap days, both daylight-saving transitions, timezone changes, goals, normalization and corrupt data, CSV escaping, undo ordering, failed reads/writes, and serialized overlapping operations.
-
-Optional browser checks use Playwright as a temporary development tool:
-
-```sh
+# Optional temporary browser tooling:
 npm install --no-save --package-lock=false playwright
 npx playwright install chromium
 npm run test:browser
 ```
 
-This loads the real extension into an isolated Chromium profile, tests its popup at 380×600, and checks optimistic updates, rapid clicks, failed-write rollback, undo, settings validation, reset cancellation/confirmation, keyboard focus, reduced motion, CSV downloads, multiple open views, corrupt-storage recovery, and persistence after closing the popup and restarting the browser. It checks text contrast, horizontal overflow, uncaught errors, and absence of external HTTP requests. Screenshots are written to the ignored `test-results/` folder. The temporary browser profile is deleted afterward.
+Node tests cover migration preservation/failure/retry, ISO timestamps, legacy goals, serialized writes, corrupted history protection, calendar boundaries/DST/timezones, streak rest days, heatmap boundaries, notes/status changes, milestone receipts, CSV round trips/deduplication, and shortcut repeat protection.
 
-Browser verification opens the extension’s real popup document as a tab; the toolbar’s popup placement and OS-specific Chrome rendering can be checked manually after unpacked installation.
+Browser checks load the real extension into an isolated Chromium profile and open the popup document at 380×600. They exercise optimistic updates, write rollback, settings, toggles, themes/accents, keyboard focus, reduced motion, CSV tools, History editing, badge updates, the shortcut handler path, and persistence after browser restart. They check contrast, overflow, and absence of external HTTP requests. OS-level shortcut delivery and toolbar popup placement should also be checked manually after installation.
 
-Local PNG icons can be regenerated with Python 3’s standard library:
+Regenerate icons with `npm run icons` (Python 3 standard library).
 
-```sh
-npm run icons
-```
+## Font notices
 
-## Project layout
-
-- `manifest.json`, `popup.html`, `popup.css`, `popup.js`: extension definition and interface.
-- `background.js`: module service worker and internal message listener.
-- `lib/store.js`: validated, serialized reads and mutations with authoritative responses.
-- `lib/data.js`: normalization, calendar calculations, statistics, and CSV generation.
-- `icons/`, `scripts/generate-icons.py`: bundled icons and their reproducible generator.
-- `tests/`: unit and optional browser checks.
-
-Internal messages are `getState`, `addApplication`, `undoLatest`, `updateGoal` (with numeric `goal`), and `resetHistory`. Unknown requests, extra fields, and invalid goals are rejected. Failed operations do not interrupt the worker’s queue. Chrome storage events keep open views consistent.
+[Inter](https://github.com/google/fonts/tree/main/ofl/inter) and [Space Grotesk](https://github.com/google/fonts/tree/main/ofl/spacegrotesk) are bundled under the SIL Open Font License 1.1. See [Inter license](fonts/Inter-LICENSE.txt) and [Space Grotesk license](fonts/SpaceGrotesk-LICENSE.txt).

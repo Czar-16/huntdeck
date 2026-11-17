@@ -43,14 +43,14 @@ function notify(message = "", error = false) {
 function controls() {
   const unavailable = !state || busy;
   $("dashboard").setAttribute("aria-busy", String(unavailable));
-  $("apply-button").disabled = unavailable || state?.historyUnreadable;
+  $("apply-button").disabled = unavailable || (state?.historyUnreadable || state?.migrationFailed || state?.readOnly);
   $("undo-button").disabled =
-    unavailable || state?.historyUnreadable || !state?.applications.length;
-  $("save-goal").disabled = unavailable || state?.historyUnreadable;
-  $("daily-goal").disabled = unavailable || state?.historyUnreadable;
+    unavailable || (state?.historyUnreadable || state?.migrationFailed || state?.readOnly) || !state?.applications.length;
+  $("save-goal").disabled = unavailable || (state?.historyUnreadable || state?.migrationFailed || state?.readOnly);
+  $("daily-goal").disabled = unavailable || (state?.historyUnreadable || state?.migrationFailed || state?.readOnly);
   $("export-button").disabled = unavailable;
-  $("reset-button").disabled = unavailable;
-  $("confirm-reset").disabled = unavailable;
+  $("reset-button").disabled = unavailable || state?.historyUnreadable || state?.migrationFailed || state?.readOnly;
+  $("confirm-reset").disabled = unavailable || $("reset-text").value !== "RESET";
   $("cancel-reset").disabled = busy;
 }
 
@@ -144,7 +144,7 @@ function render() {
     const times = document.createElement("div");
     times.className = "activity-times";
     times.textContent = day.latest
-      .map((app) => timeFormat.format(app.timestamp))
+      .map((app) => timeFormat.format(new Date(app.timestamp)))
       .join(" · ");
     const count = document.createElement("span");
     count.className = "activity-count";
@@ -156,6 +156,9 @@ function render() {
   }
   $("data-warning").hidden = !state.warnings.length;
   $("data-warning").textContent = state.warnings.join(" ");
+  $("retry-migration").hidden = !state.migrationFailed;
+  $("appearance").value = state.settings.appearance;
+  document.documentElement.dataset.theme = state.settings.appearance;
   controls();
 }
 
@@ -256,7 +259,7 @@ $("goal-form").addEventListener("submit", (event) => {
   event.preventDefault();
   const goal = Number($("daily-goal").value);
   if (!validGoal(goal)) {
-    notify("Choose a whole number from 1 to 999.", true);
+    notify("Choose a whole number from 1 to 200.", true);
     return;
   }
   void mutate({ type: "updateGoal", goal }, "Daily goal saved.");
@@ -330,3 +333,8 @@ function scheduleMidnight() {
 controls();
 void refresh();
 scheduleMidnight();
+
+$("appearance").addEventListener("change", () => mutate({type:"updateSettings", settings:{appearance:$("appearance").value}}, "Appearance saved."));
+$("reset-text").addEventListener("input", controls);
+$("retry-migration").addEventListener("click", () => mutate({type:"retryMigration"}, "Migration retried."));
+for (const [id, delta] of [["goal-minus",-1],["goal-plus",1]]) $(id).addEventListener("click", () => { $("daily-goal").value = Math.max(1,Math.min(200,Number($("daily-goal").value)+delta)); });

@@ -56,7 +56,7 @@
       Loading Huntdeck…
     </p>
 
-    <main id="dashboard" aria-busy="true">
+    <button id="retry-migration" class="secondary-button" hidden>Retry migration</button><main id="dashboard" aria-busy="true">
       <section class="hero" aria-labelledby="total-label">
         <div class="eyebrow" id="total-label">
           YOUR NEXT CHAPTER STARTS HERE
@@ -116,6 +116,7 @@
     </main>
 
     <main id="settings" hidden>
+      <section class="settings-card"><h2>Appearance</h2><label for="appearance">Theme</label><select id="appearance"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></section>
       <div class="settings-heading">
         <div class="eyebrow">MAKE IT YOURS</div>
         <h1>Settings</h1>
@@ -124,17 +125,17 @@
         <h2>Set your daily goal</h2>
         <p class="small muted">A little consistency goes a long way.</p>
         <form id="goal-form">
-          <label class="sr-only" for="daily-goal"
-            >Daily application goal (1 to 999)</label
-          ><input
+          <label for="daily-goal"
+            >Daily application goal (1 to 200)</label
+          ><button type="button" id="goal-minus" aria-label="Decrease goal">−</button><input
             id="daily-goal"
             type="number"
             min="1"
-            max="999"
+            max="200"
             step="1"
             value="10"
             required
-          /><button
+          /><button type="button" id="goal-plus" aria-label="Increase goal">+</button><button
             class="secondary-button"
             id="save-goal"
             type="submit"
@@ -170,7 +171,7 @@
             Delete all application history? This cannot be undone. Export a copy
             first if you need one.
           </p>
-          <div class="confirm-actions">
+          <label for="reset-text">Type RESET to delete</label><input id="reset-text" autocomplete="off"/><div class="confirm-actions">
             <button class="secondary-button" id="cancel-reset">Cancel</button
             ><button class="danger-button" id="confirm-reset">
               Delete history

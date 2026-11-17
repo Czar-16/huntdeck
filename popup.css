@@ -496,3 +496,13 @@ svg.ring {width:176px;height:176px;transform:rotate(-90deg);stroke-width:12px}
 .hero .apply-button {margin-top:8px}
 .pulse {animation:pulse 600ms ease-out}
 @keyframes pulse {50% {filter:drop-shadow(0 0 10px var(--green))}}
+
+:root[data-theme="light"] {color-scheme:light;--bg:#f5f6f1;--panel:#fff;--line:#d0d5ca;--text:#20251c;--muted:#535e4b;--green:#436719;--danger:#a52c22}
+@media(prefers-color-scheme:light) {:root[data-theme="system"] {color-scheme:light;--bg:#f5f6f1;--panel:#fff;--line:#d0d5ca;--text:#20251c;--muted:#535e4b;--green:#436719;--danger:#a52c22}}
+.apply-button {background:#c3f56b;color:#14210b}
+select {font:inherit;color:var(--text);background:var(--bg);padding:8px;border:1px solid var(--line);border-radius:8px}
+select:focus-visible {outline:2px solid var(--green);outline-offset:3px}
+#goal-form {flex-wrap:wrap;gap:6px}
+#goal-form label {width:100%}
+#goal-form button[type="button"] {background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px}
+#reset-text {width:100%;margin-top:8px}

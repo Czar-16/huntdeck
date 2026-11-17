@@ -78,6 +78,9 @@ function render() {
   $("streak").hidden = !state.settings.streaks || !run;
   $("streak").textContent = `${run} day streak`;
   renderFeatures();
+  $("accent-card").hidden = !state.settings.accents;
+  $("accent").value = state.settings.accent;
+  document.documentElement.dataset.accent = state.settings.accents ? state.settings.accent : "lime";
   $("import-card").hidden = !state.settings.csvImport;
   $("milestones-card").hidden = !state.settings.milestones;
   $("earned-milestones").textContent = state.settings.earnedMilestones.length ? state.settings.earnedMilestones.map(n => `${n} applications`).join(" · ") : "Your first milestone is 10 applications.";
@@ -450,3 +453,6 @@ $("import-file").addEventListener("change", async () => {
 function cancelImport() { importSource = undefined; $("import-file").value = ""; $("import-preview").hidden = true; }
 $("cancel-import").addEventListener("click", cancelImport);
 $("confirm-import").addEventListener("click", async () => { if (!importSource) return; await mutate({type:"confirmImport",csv:importSource}, "CSV imported."); cancelImport(); });
+
+addFeature("accents", "Custom accents");
+$("accent").addEventListener("change", () => mutate({type:"updateSettings",settings:{accent:$("accent").value}}, "Accent saved."));

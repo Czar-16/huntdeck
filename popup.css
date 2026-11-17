@@ -499,7 +499,7 @@ svg.ring {width:176px;height:176px;transform:rotate(-90deg);stroke-width:12px}
 
 :root[data-theme="light"] {color-scheme:light;--bg:#f5f6f1;--panel:#fff;--line:#d0d5ca;--text:#20251c;--muted:#535e4b;--green:#436719;--danger:#a52c22}
 @media(prefers-color-scheme:light) {:root[data-theme="system"] {color-scheme:light;--bg:#f5f6f1;--panel:#fff;--line:#d0d5ca;--text:#20251c;--muted:#535e4b;--green:#436719;--danger:#a52c22}}
-.apply-button {background:#c3f56b;color:#14210b}
+.apply-button {background:var(--action,#c3f56b);color:#14210b}
 select {font:inherit;color:var(--text);background:var(--bg);padding:8px;border:1px solid var(--line);border-radius:8px}
 select:focus-visible {outline:2px solid var(--green);outline-offset:3px}
 #goal-form {flex-wrap:wrap;gap:6px}
@@ -524,3 +524,10 @@ select:focus-visible {outline:2px solid var(--green);outline-offset:3px}
 #pipeline-summary {display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:10px;font-size:11px} #pipeline-summary>div {padding:8px;background:var(--bg);border-radius:8px}
 
 #import-file {width:100%;font-size:11px;margin-top:8px} #import-preview {margin-top:10px}
+
+:root[data-accent="aqua"] {--green:#6be6ed;--action:#6be6ed}
+:root[data-accent="amber"] {--green:#ffd16b;--action:#ffd16b}
+:root[data-theme="light"][data-accent="aqua"] {--green:#09646b}
+:root[data-theme="light"][data-accent="amber"] {--green:#785300}
+@media(prefers-color-scheme:light) {:root[data-theme="system"][data-accent="aqua"] {--green:#09646b} :root[data-theme="system"][data-accent="amber"] {--green:#785300}}
+.apply-button:hover:not(:disabled) {background:var(--action,#c3f56b);filter:brightness(1.05)}

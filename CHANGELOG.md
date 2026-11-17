@@ -2,6 +2,10 @@
 
 ## 1.1.1 — 2026-11-17
 
+- Provide separate Firefox 142+ and Chrome upload packages with shared Promise-based extension API access; declare no data collection for Firefox.
+- Set Alt+H to open Huntdeck and Alt+J to log by default on both browsers. Existing user assignments remain controlled by the browser.
+- Soften AMOLED red to #FF3333 and green to #4DFF4D.
+
 - Keep Apply independent of optional notes, preserving the original draft through additional clicks and failed saves. Move notes below dashboard content.
 - Require Company and Role (120 characters each) for notes; remove Tag inputs while preserving legacy tags and the CSV tag column.
 - Show complete notes as compact expandable History summaries, filter before batches of 50, and preserve expansion and unsaved edits across refreshes.

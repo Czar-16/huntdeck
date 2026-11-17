@@ -1,3 +1,4 @@
+import { extension, isFirefox } from "./lib/extension.js";
 import { matchesShortcut } from "./lib/shortcut.js";
 import {
   STORAGE_KEYS,
@@ -33,7 +34,7 @@ const dateFormat = new Intl.DateTimeFormat(undefined, {
 });
 
 async function request(message) {
-  const response = await chrome.runtime.sendMessage(message);
+  const response = await extension.runtime.sendMessage(message);
   if (!response?.ok)
     throw new Error(
       response?.error ||
@@ -421,7 +422,7 @@ document.addEventListener("keydown", (event) => {
       showSettings(false);
   }
 });
-chrome.storage.onChanged.addListener((changes, area) => {
+extension.storage.onChanged.addListener((changes, area) => {
   if (area === "local" && STORAGE_KEYS.some((key) => key in changes))
     void refresh();
 });
@@ -678,11 +679,19 @@ assignment.className = "small muted";
 const configure = document.createElement("button");
 configure.className = "text-button";
 configure.textContent = "Configure shortcut ↗";
-configure.addEventListener("click", () => chrome.tabs.create({ url: "chrome://extensions/shortcuts" }));
+configure.addEventListener("click", async () => {
+  if (isFirefox) {
+    notify("Firefox: open about:addons → gear menu → Manage Extension Shortcuts.");
+    return;
+  }
+  try {
+    await extension.tabs.create({ url: "chrome://extensions/shortcuts" });
+  } catch (error) { notify(error.message, true); }
+});
 $("feature-toggles").append(assignment, configure);
 async function readShortcut() {
   try {
-    assignedShortcut = (await chrome.commands.getAll()).find((command) => command.name === "log-application")?.shortcut || "";
+    assignedShortcut = (await extension.commands.getAll()).find((command) => command.name === "log-application")?.shortcut || "";
     if (state) renderFeatures();
   } catch { assignedShortcut = ""; }
 }

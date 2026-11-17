@@ -22,7 +22,7 @@
 | Pipeline          | Applied, Interview, Offer, and Rejected for noted entries, with a summary and status-change timestamps.                                                 |
 | Milestones        | Earn 10, 50, 100, and 250 application achievements. Receipts survive history reset.                                                                     |
 | CSV import        | Preview additions and duplicate UUIDs, then confirm. Local entries win.                                                                                 |
-| Keyboard shortcut | Shows Chrome’s actual assigned key and enabled state. Worker and popup logging share the storage queue and repeat protection.                                                                   |
+| Keyboard shortcut | Shows the browser’s actual assigned key and enabled state. Worker and popup logging share the storage queue and repeat protection.                                                                   |
 
 Switching a tool off hides its controls and retains its data. Notifications, weekly summaries, and holiday pauses are future ideas.
 
@@ -33,7 +33,17 @@ Switching a tool off hides its controls and retains its data. Notifications, wee
 3. Select **Load unpacked** and choose the folder containing `manifest.json`.
 4. Pin Huntdeck from Chrome's Extensions menu.
 
-No build step is required. After pulling updates, click **Reload** on Huntdeck's extension card and reopen the popup. This repository does not currently provide a Chrome Web Store listing or packaged release.
+No build step is required. After pulling updates, click **Reload** on Huntdeck's extension card and reopen the popup. This repository does not currently provide a Chrome Web Store listing. Upload packages can be generated with the commands below.
+
+### Firefox package and publishing
+
+Run `npm run package:firefox` to create `dist/huntdeck-1.1.1-firefox.zip` for Firefox **142+**. The archive contains only runtime files, local fonts and their licenses, with `manifest.json` at its root. It uses a Firefox module background script, the permanent add-on ID `huntdeck@czar16`, and a declaration that no data is collected or transmitted. Keep this ID for all future updates.
+
+For a temporary test, visit `about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on**, and select `dist/firefox/manifest.json`. Temporary installations are removed when Firefox closes. Permanent installation requires Mozilla signing.
+
+To publish on [Mozilla Add-ons](https://addons.mozilla.org/developers/addon/submit/distribution), choose **On this site**, then upload the Firefox ZIP. Select desktop Firefox platforms only (Android has not been tested). After validation, continue, indicate that no separate source package is needed (the packaged JavaScript is readable and has no build step), fill in the listing details and your chosen license, and submit. If asked about data collection, select none. The extension has no accounts, analytics, remote code, or network requests. Mozilla handles signing and review; publication is subject to its approval. See [Mozilla’s submission guide](https://extensionworkshop.com/documentation/publish/submitting-an-add-on/).
+
+`npm run package:chrome` creates `dist/huntdeck-1.1.1-chrome.zip` with Chrome’s service worker manifest and the same shortcut defaults. The Firefox and Chrome archives are separate; upload the matching archive to each store. Packaging adds no permissions; both request only `storage`.
 
 ## Usage
 
@@ -45,7 +55,7 @@ Use the **palette beside Settings** for immediate, persistent theme choices. Sys
 
 Open **Settings** for the daily goal, optional tools, CSV tools, milestones, and About. New goals accept whole numbers from **1–200**; existing goals up to 999 remain until explicitly edited. Reset requires typing **RESET**. It removes applications while preserving the goal, settings, and earned milestones. Export first if needed.
 
-Enable **Keyboard shortcut** in Settings and use **Configure shortcut** to open `chrome://extensions/shortcuts`. Settings shows the assigned combination or **Not assigned**. Reassign the optional shortcut there. Chrome or OS conflicts may prevent the suggested key from being assigned. Toolbar counts refresh at startup, extension activity, storage changes, and midnight while the popup is open. **Idle midnight refresh is not guaranteed** because Huntdeck does not use alarms.
+Default shortcuts on Chrome and Firefox: **Alt+H** opens Huntdeck; **Alt+J** logs an application after enabling **Keyboard shortcut** in Settings. Settings shows the browser’s actual assigned log key or **Not assigned**. Chrome’s **Configure shortcut** opens `chrome://extensions/shortcuts`; Firefox’s control explains how to reach **about:addons → gear menu → Manage Extension Shortcuts**. Existing installations can retain earlier assignments, so set these keys there if needed. Browser or OS conflicts may prevent a suggested key from being assigned. Toolbar counts refresh at startup, extension activity, storage changes, and midnight while the popup is open. **Idle midnight refresh is not guaranteed** because Huntdeck does not use alarms.
 
 Counts group timestamps in your current local timezone. Weeks start on Monday; calendar calculations handle daylight-saving transitions. The original recording-local date remains available in backups even if you change timezones. Huntdeck records clicks and does not inspect websites.
 
@@ -61,7 +71,7 @@ Local browser checks generate screenshots in the ignored `test-results/` folder.
 
 Huntdeck requests only **`storage`**. It has no accounts, analytics, content scripts, host permissions, remote fonts, runtime services, or external requests. README badges above are GitHub documentation images; the installed extension bundles all its resources.
 
-History is stored in `chrome.storage.local` under `applications`, `dailyGoal`, and `settings`, plus `schemaVersion: 2`. Data stays in the current Chrome profile. It is not synced or automatically backed up. Removing the extension or deleting profile data removes it. Chrome's local storage quota applies; failed writes are reported.
+History is stored in `chrome.storage.local` under `applications`, `dailyGoal`, and `settings`, plus `schemaVersion: 2`. Data stays in the current browser profile. It is not synced or automatically backed up. Removing the extension or deleting profile data removes it. The browser's local storage quota applies; failed writes are reported.
 
 Version 1.1 migrates old timestamps to canonical ISO strings through the service worker's serialized queue. It preserves UUIDs, recording dates, order, existing fields, and legacy goals. Migration validates the complete result before one write and is idempotent. A failed migration leaves stored data untouched, blocks edits, and provides **Retry migration** and CSV export of readable entries. Unreadable history is never discarded by a normal save or reset. A newer, unsupported schema opens read-only; update Huntdeck to edit it.
 
@@ -79,7 +89,7 @@ Reminders remain deferred. Adding them later would require `alarms` and `notific
 
 ## Tech stack
 
-Vanilla JavaScript ES modules, HTML, CSS, SVG, Manifest V3, and Chrome local storage. No runtime dependencies or build pipeline.
+Vanilla JavaScript ES modules, HTML, CSS, SVG, Manifest V3, and browser local storage. No runtime dependencies or build pipeline.
 
 ```text
 huntdeck/
@@ -117,6 +127,15 @@ After updating to 1.1.1:
 3. Close the popup, focus a normal Chrome tab, and press that combination once. Reopen Huntdeck and confirm one added application.
 4. With the popup focused outside inputs, press it once and confirm one added application; hold/repeat rapidly and check duplicate suppression. While typing Company/Role or a goal, the popup handler must not log.
 5. Disable Keyboard shortcut and verify the key no longer adds an application. Native command delivery and conflicts depend on Chrome and the OS.
+
+Validate the Firefox package with:
+
+```sh
+npm run package:firefox
+npx --yes --package=web-ext web-ext lint --source-dir dist/firefox --warnings-as-errors
+```
+
+The Firefox smoke check uses Selenium and geckodriver in an isolated profile. Install Selenium separately, then run `python3 tests/firefox-smoke.py`. On a Linux Snap installation, set `FIREFOX_BINARY=/snap/firefox/current/usr/lib/firefox/firefox`, `GECKODRIVER=/snap/bin/geckodriver`, and `FIREFOX_PROFILE_ROOT` to a writable directory under `~/snap/firefox/common/`. It temporarily installs the generated archive and exercises background messaging, counts/reload, themes, shortcut settings, notes, and compact History.
 
 Regenerate icons with `npm run icons` (Python 3 standard library).
 

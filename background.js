@@ -1,9 +1,10 @@
+import { extension } from "./lib/extension.js";
 import { statistics } from "./lib/data.js";
 import { createStore } from "./lib/store.js";
 
-const dispatch = createStore(chrome.storage.local);
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (sender.id !== chrome.runtime.id) return false;
+const dispatch = createStore(extension.storage.local);
+extension.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (sender.id !== extension.runtime.id) return false;
   dispatch(message).then(
     (state) => {
       void updateBadge(state);
@@ -16,9 +17,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 async function updateBadge(state) {
   try {
-    await chrome.action.setBadgeBackgroundColor({ color: "#c3f56b" });
-    await chrome.action.setBadgeTextColor({ color: "#14210b" });
-    await chrome.action.setBadgeText({
+    await extension.action.setBadgeBackgroundColor({ color: "#c3f56b" });
+    await extension.action.setBadgeTextColor({ color: "#14210b" });
+    await extension.action.setBadgeText({
       text: state.settings.badge
         ? String(statistics(state.applications).today)
         : "",
@@ -32,14 +33,14 @@ function refreshBadge() {
     .then(updateBadge)
     .catch((error) => console.warn(error.message));
 }
-chrome.runtime.onStartup.addListener(refreshBadge);
-chrome.runtime.onInstalled.addListener(refreshBadge);
-chrome.storage.onChanged.addListener((changes, area) => {
+extension.runtime.onStartup.addListener(refreshBadge);
+extension.runtime.onInstalled.addListener(refreshBadge);
+extension.storage.onChanged.addListener((changes, area) => {
   if (area === "local") refreshBadge();
 });
 refreshBadge();
 
-chrome.commands.onCommand.addListener((command) => {
+extension.commands.onCommand.addListener((command) => {
   if (command === "log-application")
     dispatch({ type: "shortcutLog" })
       .then(updateBadge)

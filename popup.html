@@ -58,7 +58,7 @@
 
     <button id="retry-migration" class="secondary-button" hidden>Retry migration</button><main id="dashboard" aria-busy="true">
       <section class="hero" aria-labelledby="total-label">
-        <div class="eyebrow" id="total-label">
+        <span id="streak" class="streak" hidden></span><div class="eyebrow" id="total-label">
           YOUR NEXT CHAPTER STARTS HERE
         </div>
         <div class="ring-wrap" id="goal-progress" role="progressbar" aria-label="Daily application goal" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
@@ -115,7 +115,7 @@
       </section>
     </main>
 
-    <main id="settings" hidden>
+    <main id="settings" hidden><section class="settings-card"><h2>Optional tools</h2><div id="feature-toggles"></div></section>
       <section class="settings-card"><h2>Appearance</h2><label for="appearance">Theme</label><select id="appearance"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></section>
       <div class="settings-heading">
         <div class="eyebrow">MAKE IT YOURS</div>

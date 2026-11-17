@@ -506,3 +506,9 @@ select:focus-visible {outline:2px solid var(--green);outline-offset:3px}
 #goal-form label {width:100%}
 #goal-form button[type="button"] {background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px}
 #reset-text {width:100%;margin-top:8px}
+
+.toggle {display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.toggle input {width:18px;height:18px;accent-color:var(--green)}
+.streak {color:var(--streak);font-size:10px;position:absolute;right:22px;top:60px}
+:root[data-theme="light"] .streak {color:#855000}
+@media(prefers-color-scheme:light){:root[data-theme="system"] .streak {color:#855000}}

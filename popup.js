@@ -1,4 +1,5 @@
 import {
+  streak,
   csv,
   localDate,
   millisecondsUntilMidnight,
@@ -69,6 +70,10 @@ function render() {
   }
   const now = new Date();
   const stats = statistics(state.applications, now);
+  const run = streak(state.applications, now);
+  $("streak").hidden = !state.settings.streaks || !run;
+  $("streak").textContent = `${run} day streak`;
+  renderFeatures();
   for (const key of ["total", "today", "week", "month"])
     $(key).textContent = stats[key].toLocaleString();
   $("goal-label").textContent = `${stats.today} / ${state.dailyGoal}`;
@@ -338,3 +343,16 @@ $("appearance").addEventListener("change", () => mutate({type:"updateSettings", 
 $("reset-text").addEventListener("input", controls);
 $("retry-migration").addEventListener("click", () => mutate({type:"retryMigration"}, "Migration retried."));
 for (const [id, delta] of [["goal-minus",-1],["goal-plus",1]]) $(id).addEventListener("click", () => { $("daily-goal").value = Math.max(1,Math.min(200,Number($("daily-goal").value)+delta)); });
+
+const features = {streaks:"Streaks"};
+function renderFeatures() {
+  for (const input of $("feature-toggles").querySelectorAll("input")) { input.checked = state.settings[input.name]; input.disabled = busy || state.readOnly || state.historyUnreadable || state.migrationFailed; }
+}
+function addFeature(key, title) {
+  features[key] = title;
+  const label = document.createElement("label"); label.className = "toggle";
+  const input = document.createElement("input"); input.type = "checkbox"; input.name = key; input.id = `feature-${key}`;
+  input.addEventListener("change", () => mutate({type:"updateSettings",settings:{[key]:input.checked}}, "Settings saved."));
+  label.append(document.createTextNode(title), input); $("feature-toggles").append(label);
+}
+addFeature("streaks", "Streaks");

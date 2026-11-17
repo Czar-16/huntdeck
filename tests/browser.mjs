@@ -517,7 +517,7 @@ try {
         chrome.runtime.getManifest().commands["log-application"].suggested_key
           .default,
     ),
-    "Alt+Shift+A",
+    "Alt+J",
   );
   await page.locator("#settings-button").click();
   const { csv: encodeCSV } = await import("../lib/data.js");

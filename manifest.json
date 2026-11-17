@@ -30,9 +30,15 @@
   "commands": {
     "log-application": {
       "suggested_key": {
-        "default": "Alt+Shift+A"
+        "default": "Alt+J"
       },
       "description": "Log an application (enable in Huntdeck Settings)"
+    },
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+H"
+      },
+      "description": "Open Huntdeck"
     }
   }
 }

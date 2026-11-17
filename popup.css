@@ -1,13 +1,15 @@
+@font-face {font-family: Inter; src: url("fonts/Inter.ttf"); font-weight:100 900; font-display:swap}
+@font-face {font-family:"Space Grotesk"; src:url("fonts/SpaceGrotesk.ttf"); font-weight:300 700; font-display:swap}
 :root {
   color-scheme: dark;
-  --bg: #101510;
-  --panel: #182018;
+  --bg: #101210;
+  --panel: #1b1e1a;
   --line: #2b352b;
-  --green: #b5f369;
+  --green: #c3f56b;
   --text: #edf3e9;
   --muted: #a4afa1;
   --danger: #ffaaa0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: Inter, sans-serif;
   font-size: 13px;
 }
 * {
@@ -468,3 +470,19 @@ footer {
     animation: none !important;
   }
 }
+
+:root {--radius:16px; --success:#91db9b; --streak:#f5c479}
+body {height:600px; overflow-y:auto; padding:14px 20px 0; font-variant-numeric:tabular-nums}
+h1,h2,.brand,.total {font-family:"Space Grotesk",sans-serif}
+.hero,.stats,.chart-section,.activity-section {border-radius:var(--radius)}
+.stats {grid-template-columns:repeat(4,1fr); padding:8px 0}
+.chart-section {background:var(--panel); padding:10px; margin-top:10px}
+.chart {height:66px; margin-top:4px}
+.activity-section {margin-top:10px}
+#activity {max-height:82px;overflow-y:auto}
+.activity-row {padding:6px 0}
+#message {min-height:20px; height:20px; margin:0; font-size:10px}
+.notice:empty {display:block}
+#message.error {height:auto}
+.topbar {margin-bottom:6px}
+footer {margin-top:8px; padding:8px 0}

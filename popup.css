@@ -852,3 +852,9 @@ body {
 .history-role { color: var(--muted); grid-column: 1; }
 .history-status { grid-column: 2; grid-row: 2; font-size: 11px; }
 summary:focus-visible, select:focus-visible { outline: 2px solid var(--green); outline-offset: 4px; }
+
+#goal-form { display: grid; grid-template-columns: 34px minmax(0, 1fr) 34px; align-items: center; margin-top: 12px; }
+#goal-form label, #save-goal { grid-column: 1 / -1; }
+#goal-form input { width: 100%; min-width: 0; text-align: center; }
+#goal-form button[type="button"] { height: 36px; }
+.settings-heading { margin: 12px 0 16px; }
